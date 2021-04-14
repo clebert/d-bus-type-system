@@ -1,6 +1,6 @@
 {
   "name": "d-bus-type-system",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A TypeScript implementation of the D-Bus type system with 100% test coverage.",
   "bugs": {
     "url": "https://github.com/clebert/d-bus-type-system/issues"
