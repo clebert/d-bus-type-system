@@ -1,7 +1,8 @@
+import {TextDecoder, TextEncoder} from 'util';
 import {BufferReader, BufferReaderOptions, BufferWriter, BufferWriterOptions, TypeCode, marshal, parse, unmarshal} from '.';
 
-global.TextDecoder = require('util').TextDecoder;
-global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = TextDecoder as any;
+global.TextEncoder = TextEncoder;
 
 function toBytes(buffer: ArrayBuffer): string {
   return Array.prototype.map.call(new Uint8Array(buffer), (byte) => ('00' + byte.toString(16)).slice(-2)).join(' ');
@@ -30,9 +31,9 @@ test('marshal values of all types and unmarshal them again', () => {
           '6c 01 00 01 00 00 00 00 01 00 00 00 6d 00 00 00',
           '01 01 6f 00 15 00 00 00 2f 6f 72 67 2f 66 72 65',
           '65 64 65 73 6b 74 6f 70 2f 44 42 75 73 00 00 00',
-          '03 01 73 00 05 00 00 00 48 65 6c 6c 6f 00 00 00',
           '02 01 73 00 14 00 00 00 6f 72 67 2e 66 72 65 65',
           '64 65 73 6b 74 6f 70 2e 44 42 75 73 00 00 00 00',
+          '03 01 73 00 05 00 00 00 48 65 6c 6c 6f 00 00 00',
           '06 01 73 00 14 00 00 00 6f 72 67 2e 66 72 65 65',
           '64 65 73 6b 74 6f 70 2e 44 42 75 73 00'
         )
@@ -46,8 +47,8 @@ test('marshal values of all types and unmarshal them again', () => {
         1, // serial
         [
           [1, ['o', '/org/freedesktop/DBus']], // path
-          [3, ['s', 'Hello']], // member
           [2, ['s', 'org.freedesktop.DBus']], // interface
+          [3, ['s', 'Hello']], // member
           [6, ['s', 'org.freedesktop.DBus']], // destination
         ],
       ],

@@ -24,6 +24,7 @@
     "build:cjs": "tsc --project tsconfig.cjs.json --incremental --pretty",
     "build:esm": "tsc --project tsconfig.esm.json --incremental --pretty",
     "ci": "run-p build format:test lint test",
+    "postci": "node example.js",
     "format": "prettier --write '**/*.{html,js,json,md,ts,tsx,yml}'",
     "format:test": "prettier --list-different '**/*.{html,js,json,md,ts,tsx,yml}'",
     "lint": "tslint --config tslint.json --project tsconfig.json --format verbose",
