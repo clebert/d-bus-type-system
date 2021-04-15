@@ -37,10 +37,10 @@ npm install d-bus-type-system
 ```js
 import {BufferWriter, marshal, parse} from 'd-bus-type-system';
 
-const wireFormat = new BufferWriter({littleEndian: true});
+const wireFormatWriter = new BufferWriter({littleEndian: true});
 const type = parse('(yyyyuua(yv))');
 
-marshal(wireFormat, type, [
+marshal(wireFormatWriter, type, [
   'l'.charCodeAt(0), // endianness
   1, // message type: method call
   0, // flags
@@ -55,9 +55,9 @@ marshal(wireFormat, type, [
   ],
 ]);
 
-wireFormat.align(8);
+wireFormatWriter.align(8);
 
-console.log(wireFormat.buffer);
+console.log(wireFormatWriter.buffer);
 ```
 
 ```
@@ -76,10 +76,11 @@ console.log(wireFormat.buffer);
 ```js
 import {BufferReader, unmarshal} from 'd-bus-type-system';
 
-const value = unmarshal(
-  new BufferReader(wireFormat.buffer, {littleEndian: true}),
-  type
-);
+const wireFormatReader = new BufferReader(wireFormatWriter.buffer, {
+  littleEndian: true,
+});
+
+const value = unmarshal(wireFormatReader, type);
 
 console.log(JSON.stringify(value));
 ```

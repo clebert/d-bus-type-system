@@ -2,57 +2,58 @@ import {BufferReader} from './buffer-reader';
 import {CompleteType, DictEntryType, Predicate, TypeCode, parse} from './parse';
 import {isNumber} from './predicates/is-number';
 import {isString} from './predicates/is-string';
+import {validate} from './validate';
 
 export function unmarshal<TType extends CompleteType | DictEntryType>(
-  wireFormat: BufferReader,
+  wireFormatReader: BufferReader,
   type: TType,
   typeName?: string
 ): TType['predicate'] extends Predicate<infer TValue> ? TValue : never;
 
 export function unmarshal(
-  wireFormat: BufferReader,
+  wireFormatReader: BufferReader,
   type: CompleteType | DictEntryType,
   typeName: string = ''
 ): unknown {
   try {
-    wireFormat.align(type.bytePadding);
+    wireFormatReader.align(type.bytePadding);
 
     switch (type.typeCode) {
       case TypeCode.Uint8: {
-        return wireFormat.readUint8();
+        return validate(type, wireFormatReader.readUint8());
       }
       case TypeCode.Int16: {
-        return wireFormat.readInt16();
+        return validate(type, wireFormatReader.readInt16());
       }
       case TypeCode.Uint16: {
-        return wireFormat.readUint16();
+        return validate(type, wireFormatReader.readUint16());
       }
       case TypeCode.Int32: {
-        return wireFormat.readInt32();
+        return validate(type, wireFormatReader.readInt32());
       }
       case TypeCode.Uint32:
       case TypeCode.UnixFD: {
-        return wireFormat.readUint32();
+        return validate(type, wireFormatReader.readUint32());
       }
       case TypeCode.BigInt64: {
-        return wireFormat.readBigInt64();
+        return validate(type, wireFormatReader.readBigInt64());
       }
       case TypeCode.BigUint64: {
-        return wireFormat.readBigUint64();
+        return validate(type, wireFormatReader.readBigUint64());
       }
       case TypeCode.Float64: {
-        return wireFormat.readFloat64();
+        return validate(type, wireFormatReader.readFloat64());
       }
       case TypeCode.Boolean: {
-        const {byteOffset} = wireFormat;
-        const value = wireFormat.readUint32();
+        const {byteOffset} = wireFormatReader;
+        const value = wireFormatReader.readUint32();
 
         if (value === 1) {
-          return true;
+          return validate(type, true);
         }
 
         if (value === 0) {
-          return false;
+          return validate(type, false);
         }
 
         throw new Error(`byte-offset=${byteOffset}; invalid-value=${value}`);
@@ -61,7 +62,7 @@ export function unmarshal(
       case TypeCode.ObjectPath:
       case TypeCode.Signature: {
         const byteLength = unmarshal(
-          wireFormat,
+          wireFormatReader,
           type.typeCode === TypeCode.Signature
             ? {typeCode: TypeCode.Uint8, bytePadding: 1, predicate: isNumber}
             : {typeCode: TypeCode.Uint32, bytePadding: 4, predicate: isNumber},
@@ -69,7 +70,7 @@ export function unmarshal(
         );
 
         const value = new TextDecoder().decode(
-          wireFormat.readBytes(byteLength)
+          wireFormatReader.readBytes(byteLength)
         );
 
         const nulByteIndex = value.indexOf('\u0000');
@@ -77,81 +78,88 @@ export function unmarshal(
         if (nulByteIndex > -1) {
           throw new Error(
             `byte-offset=${
-              wireFormat.byteOffset - (value.length - nulByteIndex)
+              wireFormatReader.byteOffset - (value.length - nulByteIndex)
             }; unexpected-nul-byte`
           );
         }
 
-        const {byteOffset} = wireFormat;
+        const {byteOffset} = wireFormatReader;
 
-        if (wireFormat.readUint8() !== 0) {
+        if (wireFormatReader.readUint8() !== 0) {
           throw new Error(`byte-offset=${byteOffset}; expected-nul-byte`);
         }
 
-        return value;
+        return validate(type, value);
       }
       case TypeCode.Array: {
-        const {byteOffset} = wireFormat;
+        const {byteOffset} = wireFormatReader;
 
         const byteLength = unmarshal(
-          wireFormat,
+          wireFormatReader,
           {typeCode: TypeCode.Uint32, bytePadding: 4, predicate: isNumber},
           'byte-length'
         );
 
         try {
-          wireFormat.align(type.elementType.bytePadding);
+          wireFormatReader.align(type.elementType.bytePadding);
         } catch (error) {
           throw new Error(
-            `type=${type.elementType.typeCode}=element[0]; ${error.message}`
+            `type=${type.elementType.typeCode}=${type.typeCode}[0]; ${error.message}`
           );
         }
 
-        const finalByteOffset = wireFormat.byteOffset + byteLength;
+        const finalByteOffset = wireFormatReader.byteOffset + byteLength;
         const elements: unknown[] = [];
 
-        while (wireFormat.byteOffset < finalByteOffset) {
+        while (wireFormatReader.byteOffset < finalByteOffset) {
           elements.push(
             unmarshal(
-              wireFormat,
+              wireFormatReader,
               type.elementType,
-              `element[${elements.length}]`
+              `${type.typeCode}[${elements.length}]`
             )
           );
         }
 
-        if (wireFormat.byteOffset > finalByteOffset) {
+        if (wireFormatReader.byteOffset > finalByteOffset) {
           throw new Error(
             `byte-offset=${byteOffset}; invalid-byte-length; actual=${
-              byteLength + (wireFormat.byteOffset - finalByteOffset)
+              byteLength + (wireFormatReader.byteOffset - finalByteOffset)
             }; expected=${byteLength}`
           );
         }
 
-        return elements;
+        return validate(type, elements);
       }
       case TypeCode.Struct: {
-        return type.fieldTypes.map((fieldType, index) =>
-          unmarshal(wireFormat, fieldType, `field[${index}]`)
+        return validate(
+          type,
+          type.fieldTypes.map((fieldType, index) =>
+            unmarshal(wireFormatReader, fieldType, `${type.typeCode}[${index}]`)
+          )
         );
       }
       case TypeCode.Variant: {
         const variantSignature = unmarshal(
-          wireFormat,
+          wireFormatReader,
           {typeCode: TypeCode.Signature, bytePadding: 1, predicate: isString},
-          'signature'
+          `${type.typeCode}[0]`
         );
 
-        return [
+        return validate(type, [
           variantSignature,
-          unmarshal(wireFormat, parse(variantSignature), 'value'),
-        ];
+          unmarshal(
+            wireFormatReader,
+            parse(variantSignature),
+            `${type.typeCode}[1]`
+          ),
+        ]);
       }
       case TypeCode.DictEntry: {
-        return [
-          unmarshal(wireFormat, type.keyType, 'key'),
-          unmarshal(wireFormat, type.valueType, 'value'),
-        ];
+        return validate(type, [
+          unmarshal(wireFormatReader, type.keyType, `${type.typeCode}[0]`),
+          unmarshal(wireFormatReader, type.valueType, `${type.typeCode}[1]`),
+        ]);
       }
     }
   } catch (error) {

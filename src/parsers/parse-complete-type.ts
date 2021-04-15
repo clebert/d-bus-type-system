@@ -1,10 +1,10 @@
 import {CompleteType} from '../parse';
-import {StringReader} from '../string-reader';
+import {StringCursor} from '../string-cursor';
 import {parseBasicType} from './parse-basic-type';
 import {parseContainerType} from './parse-container-type';
 
 export function parseCompleteType(
-  signature: StringReader
+  signatureCursor: StringCursor
 ): CompleteType | undefined {
-  return parseBasicType(signature) ?? parseContainerType(signature);
+  return parseBasicType(signatureCursor) ?? parseContainerType(signatureCursor);
 }

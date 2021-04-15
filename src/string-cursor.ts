@@ -1,4 +1,4 @@
-export class StringReader {
+export class StringCursor {
   readonly #value: string;
 
   #position: number = 0;
@@ -7,7 +7,7 @@ export class StringReader {
     this.#value = value;
   }
 
-  readChar(): string | undefined {
+  next(): string | undefined {
     const char = this.#value[this.#position];
 
     this.#position += 1;
@@ -15,7 +15,7 @@ export class StringReader {
     return char;
   }
 
-  resetChar(): void {
+  undo(): void {
     this.#position -= 1;
 
     return undefined;

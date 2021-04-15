@@ -108,10 +108,11 @@ test('marshal values of all types and unmarshal them again', () => {
     ['s', 'be', 0, '00 00 00 03 66 6f 6f 00', 'foo'],
     ['s', 'le', 1, '00 00 00 00 03 00 00 00 66 6f 6f 00', 'foo'],
 
-    ['o', 'le', 0, '00 00 00 00 00', ''],
-    ['o', 'le', 0, '03 00 00 00 66 6f 6f 00', 'foo'],
-    ['o', 'be', 0, '00 00 00 03 66 6f 6f 00', 'foo'],
-    ['o', 'le', 1, '00 00 00 00 03 00 00 00 66 6f 6f 00', 'foo'],
+    ['o', 'le', 0, '01 00 00 00 2f 00', '/'],
+    ['o', 'be', 0, '00 00 00 01 2f 00', '/'],
+    ['o', 'le', 0, '06 00 00 00 2f 61 5f 42 5f 30 00', '/a_B_0'],
+    ['o', 'le', 0, '0c 00 00 00 2f 61 5f 42 5f 30 2f 78 5f 5a 5f 39 00', '/a_B_0/x_Z_9'],
+    ['o', 'be', 1, '00 00 00 00 00 00 00 01 2f 00', '/'],
 
     ['g', 'le', 0, '00 00', ''],
     ['g', 'le', 0, '03 66 6f 6f 00', 'foo'],
@@ -158,12 +159,15 @@ test('marshal values of all types and unmarshal them again', () => {
       options = {...options, byteOffset};
     }
 
-    const wireFormat = new BufferWriter(options);
+    const wireFormatWriter = new BufferWriter(options);
+    const type = parse(signature);
 
-    marshal(wireFormat, parse(signature), value);
+    marshal(wireFormatWriter, type, value);
+    expect(toBytes(wireFormatWriter.buffer)).toBe(bytes);
 
-    expect(toBytes(wireFormat.buffer)).toBe(bytes);
-    expect(unmarshal(new BufferReader(wireFormat.buffer, options), parse(signature))).toEqual(value);
+    const wireFormatReader = new BufferReader(wireFormatWriter.buffer, options);
+
+    expect(unmarshal(wireFormatReader, type)).toEqual(value);
   }
 });
 
@@ -220,6 +224,11 @@ test('various unmarshalling errors', () => {
     ['s', 'le', 1, '00', 'type=s; alignment; byte-offset=1; out-of-bounds=3'],
     ['s', 'le', 1, '00 00 00 00', 'type=s; type=u=byte-length; byte-offset=4; out-of-bounds=4'],
 
+    ['o', 'le', 0, '00 00 00 00 00', 'type=o; invalid-value=""'],
+    ['o', 'le', 0, '02 00 00 00 2f 2f 00', 'type=o; invalid-value="//"'],
+    ['o', 'le', 0, '07 00 00 00 2f 61 5f 42 5f 30 2f 00', 'type=o; invalid-value="/a_B_0/"'],
+    ['o', 'le', 0, '06 00 00 00 2f 61 2d 42 2d 30 00', 'type=o; invalid-value="/a-B-0"'],
+
     ['o', 'le', 0, '02 00 00 00 66 6f 6f 00', 'type=o; byte-offset=6; expected-nul-byte'],
     ['o', 'le', 0, '04 00 00 00 66 6f 6f 00', 'type=o; byte-offset=7; unexpected-nul-byte'],
     ['o', 'le', 0, '03 00 00 00 00 6f 6f 00', 'type=o; byte-offset=4; unexpected-nul-byte'],
@@ -239,40 +248,42 @@ test('various unmarshalling errors', () => {
 
     ['an', 'le', 0, '05 00 00 00 00 00 01 00 02 00', 'type=a; byte-offset=0; invalid-byte-length; actual=6; expected=5'],
     ['an', 'le', 1, '00 00 00 00 05 00 00 00 00 00 01 00 02 00', 'type=a; byte-offset=4; invalid-byte-length; actual=6; expected=5'],
-    ['an', 'le', 0, '05 00 00 00 00 00 01 00 02', 'type=a; type=n=element[2]; byte-offset=8; out-of-bounds=1'],
+    ['an', 'le', 0, '05 00 00 00 00 00 01 00 02', 'type=a; type=n=a[2]; byte-offset=8; out-of-bounds=1'],
     ['an', 'le', 0, '', 'type=a; type=u=byte-length; byte-offset=0; out-of-bounds=4'],
     ['an', 'le', 1, '00', 'type=a; alignment; byte-offset=1; out-of-bounds=3'],
     ['an', 'le', 1, '00 00 00 00', 'type=a; type=u=byte-length; byte-offset=4; out-of-bounds=4'],
 
-    ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00', 'type=a; type=e=element[0]; type=y=key; byte-offset=8; out-of-bounds=1'],
-    ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00 13', 'type=a; type=e=element[0]; type=n=value; alignment; byte-offset=9; out-of-bounds=1'],
-    ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00 13 00', 'type=a; type=e=element[0]; type=n=value; byte-offset=10; out-of-bounds=2'],
-    ['a{yn}', 'le', 0, '04 00 00 00', 'type=a; type=e=element[0]; alignment; byte-offset=4; out-of-bounds=4'],
+    ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00', 'type=a; type=e=a[0]; type=y=e[0]; byte-offset=8; out-of-bounds=1'],
+    ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00 13', 'type=a; type=e=a[0]; type=n=e[1]; alignment; byte-offset=9; out-of-bounds=1'],
+    ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00 13 00', 'type=a; type=e=a[0]; type=n=e[1]; byte-offset=10; out-of-bounds=2'],
+    ['a{yn}', 'le', 0, '04 00 00 00', 'type=a; type=e=a[0]; alignment; byte-offset=4; out-of-bounds=4'],
 
-    ['(n)', 'le', 0, '', 'type=r; type=n=field[0]; byte-offset=0; out-of-bounds=2'],
+    ['(n)', 'le', 0, '', 'type=r; type=n=r[0]; byte-offset=0; out-of-bounds=2'],
     ['(n)', 'le', 1, '00', 'type=r; alignment; byte-offset=1; out-of-bounds=7'],
-    ['(n)', 'le', 1, '00 00 00 00 00 00 00 00', 'type=r; type=n=field[0]; byte-offset=8; out-of-bounds=2'],
+    ['(n)', 'le', 1, '00 00 00 00 00 00 00 00', 'type=r; type=n=r[0]; byte-offset=8; out-of-bounds=2'],
 
-    ['(uuu)', 'le', 0, '', 'type=r; type=u=field[0]; byte-offset=0; out-of-bounds=4'],
-    ['(uuu)', 'le', 0, '2a 00 00 00', 'type=r; type=u=field[1]; byte-offset=4; out-of-bounds=4'],
+    ['(uuu)', 'le', 0, '', 'type=r; type=u=r[0]; byte-offset=0; out-of-bounds=4'],
+    ['(uuu)', 'le', 0, '2a 00 00 00', 'type=r; type=u=r[1]; byte-offset=4; out-of-bounds=4'],
     ['(uuu)', 'le', 1, '00', 'type=r; alignment; byte-offset=1; out-of-bounds=7'],
-    ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00', 'type=r; type=u=field[0]; byte-offset=8; out-of-bounds=4'],
-    ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00 00 00', 'type=r; type=u=field[1]; byte-offset=12; out-of-bounds=4'],
+    ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00', 'type=r; type=u=r[0]; byte-offset=8; out-of-bounds=4'],
+    ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00 00 00', 'type=r; type=u=r[1]; byte-offset=12; out-of-bounds=4'],
 
-    ['v', 'le', 0, '', 'type=v; type=g=signature; type=y=byte-length; byte-offset=0; out-of-bounds=1'],
-    ['v', 'le', 0, '01 6e 00', 'type=v; type=n=value; alignment; byte-offset=3; out-of-bounds=1'],
-    ['v', 'le', 1, '00 01 6e 00', 'type=v; type=n=value; byte-offset=4; out-of-bounds=2'],
+    ['v', 'le', 0, '', 'type=v; type=g=v[0]; type=y=byte-length; byte-offset=0; out-of-bounds=1'],
+    ['v', 'le', 0, '01 6e 00', 'type=v; type=n=v[1]; alignment; byte-offset=3; out-of-bounds=1'],
+    ['v', 'le', 1, '00 01 6e 00', 'type=v; type=n=v[1]; byte-offset=4; out-of-bounds=2'],
   ];
 
   for (const [signature, endianness, byteOffset, bytes, message] of testCases) {
-    const wireFormat = new BufferReader(toBuffer(bytes), {littleEndian: endianness === 'le', byteOffset});
+    const wireFormatReader = new BufferReader(toBuffer(bytes), {littleEndian: endianness === 'le', byteOffset});
 
-    expect(() => unmarshal(wireFormat, parse(signature))).toThrow(new Error(message));
+    expect(() => unmarshal(wireFormatReader, parse(signature))).toThrow(new Error(message));
   }
 });
 
 test('various marshalling errors', () => {
   const testCases: readonly [string, 'le' | 'be', 0 | 1, unknown, string][] = [
+    ['z', 'le', 0, 'foo', 'signature; invalid-value="z"'],
+
     ['y', 'le', 0, 'foo', 'type=y; invalid-value="foo"'],
     ['n', 'le', 0, 'foo', 'type=n; invalid-value="foo"'],
     ['q', 'le', 0, 'foo', 'type=q; invalid-value="foo"'],
@@ -284,48 +295,61 @@ test('various marshalling errors', () => {
     ['b', 'le', 0, 'foo', 'type=b; invalid-value="foo"'],
     ['h', 'le', 0, 'foo', 'type=h; invalid-value="foo"'],
     ['s', 'le', 0, 42, 'type=s; invalid-value=42'],
+
     ['o', 'le', 0, 42, 'type=o; invalid-value=42'],
+    ['o', 'le', 0, '', 'type=o; invalid-value=""'],
+    ['o', 'le', 0, '//', 'type=o; invalid-value="//"'],
+    ['o', 'le', 0, '/a_B_0/', 'type=o; invalid-value="/a_B_0/"'],
+    ['o', 'le', 0, '/a-B-0', 'type=o; invalid-value="/a-B-0"'],
+
     ['g', 'le', 0, 42, 'type=g; invalid-value=42'],
 
-    ['a', 'le', 0, [], 'type=a; invalid-element-type'],
-    ['az', 'le', 0, [], 'type=a; invalid-element-type'],
-    ['ay', 'le', 0, {}, 'type=a; invalid-value={}'],
-    ['ay', 'le', 0, ['foo'], 'type=y; invalid-value="foo"'],
-    ['a{yn}', 'le', 0, [{}], 'type=e; invalid-value={}'],
-    ['a{yn}', 'le', 0, [[]], 'type=e; invalid-value=[]'],
-    ['a{yn}', 'le', 0, [[19]], 'type=e; invalid-value=[19]'],
-    ['a{yn}', 'le', 0, [[19, 85, 'foo']], 'type=e; invalid-value=[19,85,"foo"]'],
-    ['a{yn}', 'le', 0, [['foo', 85]], 'type=y; invalid-value="foo"'],
-    ['a{yn}', 'le', 0, [[19, 'foo']], 'type=n; invalid-value="foo"'],
-    ['a{', 'le', 0, [[19, 85]], 'type=e; invalid-key-type'],
-    ['a{ay', 'le', 0, [[19, 85]], 'type=e; invalid-key-type'],
-    ['a{v', 'le', 0, [[19, 85]], 'type=e; invalid-key-type'],
-    ['a{y', 'le', 0, [[19, 85]], 'type=e; invalid-value-type'],
-    ['a{yz', 'le', 0, [[19, 85]], 'type=e; invalid-value-type'],
-    ['a{yn', 'le', 0, [[19, 85]], 'type=e; unexpected-end'],
-    ['a{ynn', 'le', 0, [[19, 85]], 'type=e; unexpected-end'],
+    ['a', 'le', 0, [], 'signature; type=a; invalid-element-type'],
+    ['az', 'le', 0, [], 'signature; type=a; invalid-element-type'],
 
-    ['(', 'le', 0, [], 'type=r; invalid-field-type'],
-    ['()', 'le', 0, [], 'type=r; invalid-field-type'],
-    ['(z)', 'le', 0, [], 'type=r; invalid-field-type'],
-    ['(y', 'le', 0, [], 'type=r; invalid-field-type'],
-    ['(yz', 'le', 0, [], 'type=r; invalid-field-type'],
-    ['(yzy', 'le', 0, [], 'type=r; invalid-field-type'],
+    ['ay', 'le', 0, {}, 'type=a; invalid-value={}'],
+    ['ay', 'le', 0, ['foo'], 'type=a; type=y=a[0]; invalid-value="foo"'],
+
+    ['a{', 'le', 0, [[19, 85]], 'signature; type=e; invalid-key-type'],
+    ['a{ay', 'le', 0, [[19, 85]], 'signature; type=e; invalid-key-type'],
+    ['a{v', 'le', 0, [[19, 85]], 'signature; type=e; invalid-key-type'],
+    ['a{y', 'le', 0, [[19, 85]], 'signature; type=e; invalid-value-type'],
+    ['a{yz', 'le', 0, [[19, 85]], 'signature; type=e; invalid-value-type'],
+    ['a{yn', 'le', 0, [[19, 85]], 'signature; type=e; unexpected-end'],
+    ['a{ynn', 'le', 0, [[19, 85]], 'signature; type=e; unexpected-end'],
+
+    ['a{yn}', 'le', 0, [{}], 'type=a; type=e=a[0]; invalid-value={}'],
+    ['a{yn}', 'le', 0, [[]], 'type=a; type=e=a[0]; invalid-value=[]'],
+    ['a{yn}', 'le', 0, [[19, 85], [42]], 'type=a; type=e=a[1]; invalid-value=[42]'],
+    ['a{yn}', 'le', 0, [[19, 85, 'foo']], 'type=a; type=e=a[0]; invalid-value=[19,85,"foo"]'],
+    ['a{yn}', 'le', 0, [['foo', 85]], 'type=a; type=e=a[0]; type=y=e[0]; invalid-value="foo"'],
+    ['a{yn}', 'le', 0, [[19, 'foo']], 'type=a; type=e=a[0]; type=n=e[1]; invalid-value="foo"'],
+
+    ['(', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+    ['()', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+    ['(z)', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+    ['(y', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+    ['(yz', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+    ['(yzy', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+
     ['(y)', 'le', 0, [], 'type=r; invalid-value=[]'],
     ['(y)', 'le', 0, [19, 85], 'type=r; invalid-number-of-fields=[19,85]; actual=2; expected=1'],
     ['(yy)', 'le', 0, [19], 'type=r; invalid-number-of-fields=[19]; actual=1; expected=2'],
+    ['(yy)', 'le', 0, ['foo', 85], 'type=r; type=y=r[0]; invalid-value="foo"'],
+    ['(yy)', 'le', 0, [19, 'foo'], 'type=r; type=y=r[1]; invalid-value="foo"'],
 
     ['v', 'le', 0, [], 'type=v; invalid-value=[]'],
     ['v', 'le', 0, ['foo'], 'type=v; invalid-value=["foo"]'],
     ['v', 'le', 0, [19, 85], 'type=v; invalid-value=[19,85]'],
     ['v', 'le', 0, ['foo', 19, 85], 'type=v; invalid-value=["foo",19,85]'],
-    ['v', 'le', 0, ['foo', 42], 'invalid-signature="foo"'],
-    ['v', 'le', 0, ['s', 42], 'type=s; invalid-value=42'],
+    ['v', 'le', 0, ['foo', 42], 'type=v; signature; invalid-value="foo"'],
+    ['v', 'le', 0, ['nn', 42], 'type=v; signature; invalid-value="nn"'],
+    ['v', 'le', 0, ['s', 42], 'type=v; type=s=v[1]; invalid-value=42'],
   ];
 
   for (const [signature, endianness, byteOffset, value, message] of testCases) {
-    expect(() => marshal(new BufferWriter({littleEndian: endianness === 'le', byteOffset}), parse(signature), value)).toThrow(
-      new Error(message)
-    );
+    const wireFormatWriter = new BufferWriter({littleEndian: endianness === 'le', byteOffset});
+
+    expect(() => marshal(wireFormatWriter, parse(signature), value)).toThrow(new Error(message));
   }
 });

@@ -10,9 +10,7 @@ export function validate(
   value: unknown
 ): unknown {
   if (!type.predicate(value)) {
-    throw new Error(
-      `type=${type.typeCode}; invalid-value=${JSON.stringify(value)}`
-    );
+    throw new Error(`invalid-value=${JSON.stringify(value)}`);
   }
 
   return value;

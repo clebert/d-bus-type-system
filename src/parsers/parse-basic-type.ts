@@ -2,11 +2,14 @@ import {BasicType, TypeCode} from '../parse';
 import {isBigint} from '../predicates/is-bigint';
 import {isBoolean} from '../predicates/is-boolean';
 import {isNumber} from '../predicates/is-number';
+import {isObjectPath} from '../predicates/is-object-path';
 import {isString} from '../predicates/is-string';
-import {StringReader} from '../string-reader';
+import {StringCursor} from '../string-cursor';
 
-export function parseBasicType(signature: StringReader): BasicType | undefined {
-  const typeCode = signature.readChar();
+export function parseBasicType(
+  signatureCursor: StringCursor
+): BasicType | undefined {
+  const typeCode = signatureCursor.next();
 
   switch (typeCode) {
     case TypeCode.Uint8: {
@@ -27,9 +30,11 @@ export function parseBasicType(signature: StringReader): BasicType | undefined {
     case TypeCode.Boolean: {
       return {typeCode, bytePadding: 4, predicate: isBoolean};
     }
-    case TypeCode.String:
-    case TypeCode.ObjectPath: {
+    case TypeCode.String: {
       return {typeCode, bytePadding: 4, predicate: isString};
+    }
+    case TypeCode.ObjectPath: {
+      return {typeCode, bytePadding: 4, predicate: isObjectPath};
     }
     case TypeCode.BigInt64:
     case TypeCode.BigUint64: {
@@ -40,7 +45,7 @@ export function parseBasicType(signature: StringReader): BasicType | undefined {
     }
   }
 
-  signature.resetChar();
+  signatureCursor.undo();
 
   return undefined;
 }

@@ -1,5 +1,5 @@
 import {parseCompleteType} from './parsers/parse-complete-type';
-import {StringReader} from './string-reader';
+import {StringCursor} from './string-cursor';
 
 export type CompleteType = BasicType | ContainerType;
 
@@ -149,11 +149,16 @@ export enum TypeCode {
 export type Predicate<TValue> = (value: unknown) => value is TValue;
 
 export function parse(signature: string): CompleteType {
-  const type = parseCompleteType(new StringReader(signature));
+  try {
+    const signatureCursor = new StringCursor(signature);
+    const type = parseCompleteType(signatureCursor);
 
-  if (!type) {
-    throw new Error(`invalid-signature=${JSON.stringify(signature)}`);
+    if (!type || signatureCursor.next()) {
+      throw new Error(`invalid-value=${JSON.stringify(signature)}`);
+    }
+
+    return type;
+  } catch (error) {
+    throw new Error(`signature; ${error.message}`);
   }
-
-  return type;
 }

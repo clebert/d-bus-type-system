@@ -1,29 +1,29 @@
 import {DictEntryType, TypeCode} from '../parse';
 import {isDictEntry} from '../predicates/is-dict-entry';
-import {StringReader} from '../string-reader';
+import {StringCursor} from '../string-cursor';
 import {parseBasicType} from './parse-basic-type';
 import {parseCompleteType} from './parse-complete-type';
 
 export function parseDictEntryType(
-  signature: StringReader
+  signatureCursor: StringCursor
 ): DictEntryType | undefined {
-  const typeCode = signature.readChar();
+  const typeCode = signatureCursor.next();
 
   switch (typeCode) {
     case '{': {
-      const keyType = parseBasicType(signature);
+      const keyType = parseBasicType(signatureCursor);
 
       if (!keyType) {
         throw new Error(`type=${TypeCode.DictEntry}; invalid-key-type`);
       }
 
-      const valueType = parseCompleteType(signature);
+      const valueType = parseCompleteType(signatureCursor);
 
       if (!valueType) {
         throw new Error(`type=${TypeCode.DictEntry}; invalid-value-type`);
       }
 
-      if (signature.readChar() !== '}') {
+      if (signatureCursor.next() !== '}') {
         throw new Error(`type=${TypeCode.DictEntry}; unexpected-end`);
       }
 
@@ -37,7 +37,7 @@ export function parseDictEntryType(
     }
   }
 
-  signature.resetChar();
+  signatureCursor.undo();
 
   return undefined;
 }

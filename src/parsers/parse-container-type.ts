@@ -2,19 +2,20 @@ import {CompleteType, ContainerType, TypeCode} from '../parse';
 import {isArray} from '../predicates/is-array';
 import {isStruct} from '../predicates/is-struct';
 import {isVariant} from '../predicates/is-variant';
-import {StringReader} from '../string-reader';
+import {StringCursor} from '../string-cursor';
 import {parseCompleteType} from './parse-complete-type';
 import {parseDictEntryType} from './parse-dict-entry-type';
 
 export function parseContainerType(
-  signature: StringReader
+  signatureCursor: StringCursor
 ): ContainerType | undefined {
-  const typeCode = signature.readChar();
+  const typeCode = signatureCursor.next();
 
   switch (typeCode) {
     case TypeCode.Array: {
       const elementType =
-        parseCompleteType(signature) ?? parseDictEntryType(signature);
+        parseCompleteType(signatureCursor) ??
+        parseDictEntryType(signatureCursor);
 
       if (!elementType) {
         throw new Error(`type=${typeCode}; invalid-element-type`);
@@ -23,7 +24,7 @@ export function parseContainerType(
       return {typeCode, bytePadding: 4, predicate: isArray, elementType};
     }
     case '(': {
-      const fieldType = parseCompleteType(signature);
+      const fieldType = parseCompleteType(signatureCursor);
 
       if (!fieldType) {
         throw new Error(`type=${TypeCode.Struct}; invalid-field-type`);
@@ -33,11 +34,11 @@ export function parseContainerType(
 
       let otherFieldType: CompleteType | undefined;
 
-      while ((otherFieldType = parseCompleteType(signature))) {
+      while ((otherFieldType = parseCompleteType(signatureCursor))) {
         otherFieldTypes.push(otherFieldType);
       }
 
-      if (signature.readChar() !== ')') {
+      if (signatureCursor.next() !== ')') {
         throw new Error(`type=${TypeCode.Struct}; invalid-field-type`);
       }
 
@@ -53,7 +54,7 @@ export function parseContainerType(
     }
   }
 
-  signature.resetChar();
+  signatureCursor.undo();
 
   return undefined;
 }
