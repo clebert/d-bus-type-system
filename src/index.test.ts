@@ -1,5 +1,6 @@
 import {TextDecoder, TextEncoder} from 'util';
-import {BufferReader, BufferReaderOptions, BufferWriter, BufferWriterOptions, TypeCode, marshal, parse, unmarshal} from '.';
+import {BufferReader, BufferReaderOptions, BufferWriter, BufferWriterOptions, marshal, parse, unmarshal} from '.';
+import {BasicTypeCode} from './parse';
 
 global.TextDecoder = TextDecoder as any;
 global.TextEncoder = TextEncoder;
@@ -141,9 +142,9 @@ test('marshal values of all types and unmarshal them again', () => {
     ['(uuu)', 'be', 0, '00 00 00 2a ff ff ff ff 00 00 07 c1', [42, 4294967295, 1985]],
     ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00 00 00 ff ff ff ff c1 07 00 00', [42, 4294967295, 1985]],
 
-    ['v', 'le', 0, '01 6e 00 00 2a 00', [TypeCode.Int16, 42]],
-    ['v', 'be', 0, '01 6e 00 00 00 2a', [TypeCode.Int16, 42]],
-    ['v', 'le', 1, '00 01 6e 00 2a 00', [TypeCode.Int16, 42]],
+    ['v', 'le', 0, '01 6e 00 00 2a 00', [BasicTypeCode.Int16, 42]],
+    ['v', 'be', 0, '01 6e 00 00 00 2a', [BasicTypeCode.Int16, 42]],
+    ['v', 'le', 1, '00 01 6e 00 2a 00', [BasicTypeCode.Int16, 42]],
   ];
 
   for (const [signature, endianness, byteOffset, bytes, value] of testCases) {

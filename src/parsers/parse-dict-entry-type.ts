@@ -1,4 +1,4 @@
-import {DictEntryType, TypeCode} from '../parse';
+import {ContainerTypeCode, DictEntryType} from '../parse';
 import {isDictEntry} from '../predicates/is-dict-entry';
 import {StringCursor} from '../string-cursor';
 import {parseBasicType} from './parse-basic-type';
@@ -14,23 +14,27 @@ export function parseDictEntryType(
       const keyType = parseBasicType(signatureCursor);
 
       if (!keyType) {
-        throw new Error(`type=${TypeCode.DictEntry}; invalid-key-type`);
+        throw new Error(
+          `type=${ContainerTypeCode.DictEntry}; invalid-key-type`
+        );
       }
 
       const valueType = parseCompleteType(signatureCursor);
 
       if (!valueType) {
-        throw new Error(`type=${TypeCode.DictEntry}; invalid-value-type`);
+        throw new Error(
+          `type=${ContainerTypeCode.DictEntry}; invalid-value-type`
+        );
       }
 
       if (signatureCursor.next() !== '}') {
         signatureCursor.undo();
 
-        throw new Error(`type=${TypeCode.DictEntry}; unexpected-end`);
+        throw new Error(`type=${ContainerTypeCode.DictEntry}; unexpected-end`);
       }
 
       return {
-        typeCode: TypeCode.DictEntry,
+        typeCode: ContainerTypeCode.DictEntry,
         bytePadding: 8,
         predicate: isDictEntry,
         keyType,

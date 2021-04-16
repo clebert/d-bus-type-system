@@ -1,4 +1,4 @@
-import {BasicType, TypeCode} from '../parse';
+import {BasicType, BasicTypeCode} from '../parse';
 import {isBigint} from '../predicates/is-bigint';
 import {isBoolean} from '../predicates/is-boolean';
 import {isNumber} from '../predicates/is-number';
@@ -12,35 +12,35 @@ export function parseBasicType(
   const typeCode = signatureCursor.next();
 
   switch (typeCode) {
-    case TypeCode.Uint8: {
+    case BasicTypeCode.Uint8: {
       return {typeCode, bytePadding: 1, predicate: isNumber};
     }
-    case TypeCode.Signature: {
+    case BasicTypeCode.Signature: {
       return {typeCode, bytePadding: 1, predicate: isString};
     }
-    case TypeCode.Int16:
-    case TypeCode.Uint16: {
+    case BasicTypeCode.Int16:
+    case BasicTypeCode.Uint16: {
       return {typeCode, bytePadding: 2, predicate: isNumber};
     }
-    case TypeCode.Int32:
-    case TypeCode.Uint32:
-    case TypeCode.UnixFd: {
+    case BasicTypeCode.Int32:
+    case BasicTypeCode.Uint32:
+    case BasicTypeCode.UnixFd: {
       return {typeCode, bytePadding: 4, predicate: isNumber};
     }
-    case TypeCode.Boolean: {
+    case BasicTypeCode.Boolean: {
       return {typeCode, bytePadding: 4, predicate: isBoolean};
     }
-    case TypeCode.String: {
+    case BasicTypeCode.String: {
       return {typeCode, bytePadding: 4, predicate: isString};
     }
-    case TypeCode.ObjectPath: {
+    case BasicTypeCode.ObjectPath: {
       return {typeCode, bytePadding: 4, predicate: isObjectPath};
     }
-    case TypeCode.BigInt64:
-    case TypeCode.BigUint64: {
+    case BasicTypeCode.BigInt64:
+    case BasicTypeCode.BigUint64: {
       return {typeCode, bytePadding: 8, predicate: isBigint};
     }
-    case TypeCode.Float64: {
+    case BasicTypeCode.Float64: {
       return {typeCode, bytePadding: 8, predicate: isNumber};
     }
   }

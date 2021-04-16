@@ -19,79 +19,79 @@ export type BasicType =
   | SignatureType;
 
 export interface Uint8Type {
-  readonly typeCode: TypeCode.Uint8;
+  readonly typeCode: BasicTypeCode.Uint8;
   readonly bytePadding: 1;
   readonly predicate: Predicate<number>;
 }
 
 export interface Int16Type {
-  readonly typeCode: TypeCode.Int16;
+  readonly typeCode: BasicTypeCode.Int16;
   readonly bytePadding: 2;
   readonly predicate: Predicate<number>;
 }
 
 export interface Uint16Type {
-  readonly typeCode: TypeCode.Uint16;
+  readonly typeCode: BasicTypeCode.Uint16;
   readonly bytePadding: 2;
   readonly predicate: Predicate<number>;
 }
 
 export interface Int32Type {
-  readonly typeCode: TypeCode.Int32;
+  readonly typeCode: BasicTypeCode.Int32;
   readonly bytePadding: 4;
   readonly predicate: Predicate<number>;
 }
 
 export interface Uint32Type {
-  readonly typeCode: TypeCode.Uint32;
+  readonly typeCode: BasicTypeCode.Uint32;
   readonly bytePadding: 4;
   readonly predicate: Predicate<number>;
 }
 
 export interface BigInt64Type {
-  readonly typeCode: TypeCode.BigInt64;
+  readonly typeCode: BasicTypeCode.BigInt64;
   readonly bytePadding: 8;
   readonly predicate: Predicate<bigint>;
 }
 
 export interface BigUint64Type {
-  readonly typeCode: TypeCode.BigUint64;
+  readonly typeCode: BasicTypeCode.BigUint64;
   readonly bytePadding: 8;
   readonly predicate: Predicate<bigint>;
 }
 
 export interface Float64Type {
-  readonly typeCode: TypeCode.Float64;
+  readonly typeCode: BasicTypeCode.Float64;
   readonly bytePadding: 8;
   readonly predicate: Predicate<number>;
 }
 
 export interface BooleanType {
-  readonly typeCode: TypeCode.Boolean;
+  readonly typeCode: BasicTypeCode.Boolean;
   readonly bytePadding: 4;
   readonly predicate: Predicate<boolean>;
 }
 
 export interface UnixFdType {
-  readonly typeCode: TypeCode.UnixFd;
+  readonly typeCode: BasicTypeCode.UnixFd;
   readonly bytePadding: 4;
   readonly predicate: Predicate<number>;
 }
 
 export interface StringType {
-  readonly typeCode: TypeCode.String;
+  readonly typeCode: BasicTypeCode.String;
   readonly bytePadding: 4;
   readonly predicate: Predicate<string>;
 }
 
 export interface ObjectPathType {
-  readonly typeCode: TypeCode.ObjectPath;
+  readonly typeCode: BasicTypeCode.ObjectPath;
   readonly bytePadding: 4;
   readonly predicate: Predicate<string>;
 }
 
 export interface SignatureType {
-  readonly typeCode: TypeCode.Signature;
+  readonly typeCode: BasicTypeCode.Signature;
   readonly bytePadding: 1;
   readonly predicate: Predicate<string>;
 }
@@ -99,34 +99,34 @@ export interface SignatureType {
 export type ContainerType = ArrayType | StructType | VariantType;
 
 export interface ArrayType {
-  readonly typeCode: TypeCode.Array;
+  readonly typeCode: ContainerTypeCode.Array;
   readonly bytePadding: 4;
   readonly predicate: Predicate<readonly unknown[]>;
   readonly elementType: CompleteType | DictEntryType;
 }
 
 export interface StructType {
-  readonly typeCode: TypeCode.Struct;
+  readonly typeCode: ContainerTypeCode.Struct;
   readonly bytePadding: 8;
   readonly predicate: Predicate<readonly [unknown, ...unknown[]]>;
   readonly fieldTypes: readonly [CompleteType, ...CompleteType[]];
 }
 
 export interface VariantType {
-  readonly typeCode: TypeCode.Variant;
+  readonly typeCode: ContainerTypeCode.Variant;
   readonly bytePadding: 1;
   readonly predicate: Predicate<readonly [string, unknown]>;
 }
 
 export interface DictEntryType {
-  readonly typeCode: TypeCode.DictEntry;
+  readonly typeCode: ContainerTypeCode.DictEntry;
   readonly bytePadding: 8;
   readonly predicate: Predicate<readonly [unknown, unknown]>;
   readonly keyType: BasicType;
   readonly valueType: CompleteType;
 }
 
-export enum TypeCode {
+export enum BasicTypeCode {
   Uint8 = 'y',
   Int16 = 'n',
   Uint16 = 'q',
@@ -140,6 +140,9 @@ export enum TypeCode {
   String = 's',
   ObjectPath = 'o',
   Signature = 'g',
+}
+
+export enum ContainerTypeCode {
   Array = 'a',
   Struct = 'r', // (...)
   Variant = 'v',

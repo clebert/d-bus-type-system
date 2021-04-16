@@ -1,5 +1,12 @@
 import {BufferWriter} from './buffer-writer';
-import {CompleteType, DictEntryType, Predicate, TypeCode, parse} from './parse';
+import {
+  BasicTypeCode,
+  CompleteType,
+  ContainerTypeCode,
+  DictEntryType,
+  Predicate,
+  parse,
+} from './parse';
 import {isString} from './predicates/is-string';
 import {validate} from './validate';
 
@@ -22,58 +29,58 @@ export function marshal(
     wireFormatWriter.align(type.bytePadding);
 
     switch (type.typeCode) {
-      case TypeCode.Uint8: {
+      case BasicTypeCode.Uint8: {
         wireFormatWriter.writeUint8(validate(type, value));
 
         return;
       }
-      case TypeCode.Int16: {
+      case BasicTypeCode.Int16: {
         wireFormatWriter.writeInt16(validate(type, value));
 
         return;
       }
-      case TypeCode.Uint16: {
+      case BasicTypeCode.Uint16: {
         wireFormatWriter.writeUint16(validate(type, value));
 
         return;
       }
-      case TypeCode.Int32: {
+      case BasicTypeCode.Int32: {
         wireFormatWriter.writeInt32(validate(type, value));
 
         return;
       }
-      case TypeCode.Uint32:
-      case TypeCode.UnixFd: {
+      case BasicTypeCode.Uint32:
+      case BasicTypeCode.UnixFd: {
         wireFormatWriter.writeUint32(validate(type, value));
 
         return;
       }
-      case TypeCode.BigInt64: {
+      case BasicTypeCode.BigInt64: {
         wireFormatWriter.writeBigInt64(validate(type, value));
 
         return;
       }
-      case TypeCode.BigUint64: {
+      case BasicTypeCode.BigUint64: {
         wireFormatWriter.writeBigUint64(validate(type, value));
 
         return;
       }
-      case TypeCode.Float64: {
+      case BasicTypeCode.Float64: {
         wireFormatWriter.writeFloat64(validate(type, value));
 
         return;
       }
-      case TypeCode.Boolean: {
+      case BasicTypeCode.Boolean: {
         wireFormatWriter.writeUint32(validate(type, value) ? 1 : 0);
 
         return;
       }
-      case TypeCode.String:
-      case TypeCode.ObjectPath:
-      case TypeCode.Signature: {
+      case BasicTypeCode.String:
+      case BasicTypeCode.ObjectPath:
+      case BasicTypeCode.Signature: {
         const array = new TextEncoder().encode(validate(type, value));
 
-        if (type.typeCode === TypeCode.Signature) {
+        if (type.typeCode === BasicTypeCode.Signature) {
           wireFormatWriter.writeUint8(array.byteLength);
         } else {
           wireFormatWriter.writeUint32(array.byteLength);
@@ -83,7 +90,7 @@ export function marshal(
 
         return;
       }
-      case TypeCode.Array: {
+      case ContainerTypeCode.Array: {
         const elementWireFormat = new BufferWriter({
           littleEndian: wireFormatWriter.littleEndian,
         });
@@ -106,7 +113,7 @@ export function marshal(
 
         return;
       }
-      case TypeCode.Struct: {
+      case ContainerTypeCode.Struct: {
         const fields = validate(type, value);
 
         if (fields.length < type.fieldTypes.length) {
@@ -136,12 +143,16 @@ export function marshal(
 
         return;
       }
-      case TypeCode.Variant: {
+      case ContainerTypeCode.Variant: {
         const [variantSignature, variantValue] = validate(type, value);
 
         marshal(
           wireFormatWriter,
-          {typeCode: TypeCode.Signature, bytePadding: 1, predicate: isString},
+          {
+            typeCode: BasicTypeCode.Signature,
+            bytePadding: 1,
+            predicate: isString,
+          },
           variantSignature,
           `${type.typeCode}[0]`
         );
@@ -155,7 +166,7 @@ export function marshal(
 
         return;
       }
-      case TypeCode.DictEntry: {
+      case ContainerTypeCode.DictEntry: {
         const dictEntry = validate(type, value);
 
         marshal(

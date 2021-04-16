@@ -1,4 +1,4 @@
-import {CompleteType, ContainerType, TypeCode} from '../parse';
+import {CompleteType, ContainerType, ContainerTypeCode} from '../parse';
 import {isArray} from '../predicates/is-array';
 import {isStruct} from '../predicates/is-struct';
 import {isVariant} from '../predicates/is-variant';
@@ -12,7 +12,7 @@ export function parseContainerType(
   const typeCode = signatureCursor.next();
 
   switch (typeCode) {
-    case TypeCode.Array: {
+    case ContainerTypeCode.Array: {
       const elementType =
         parseCompleteType(signatureCursor) ??
         parseDictEntryType(signatureCursor);
@@ -27,7 +27,7 @@ export function parseContainerType(
       const fieldType = parseCompleteType(signatureCursor);
 
       if (!fieldType) {
-        throw new Error(`type=${TypeCode.Struct}; invalid-field-type`);
+        throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
       }
 
       const otherFieldTypes: CompleteType[] = [];
@@ -41,17 +41,17 @@ export function parseContainerType(
       if (signatureCursor.next() !== ')') {
         signatureCursor.undo();
 
-        throw new Error(`type=${TypeCode.Struct}; invalid-field-type`);
+        throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
       }
 
       return {
-        typeCode: TypeCode.Struct,
+        typeCode: ContainerTypeCode.Struct,
         bytePadding: 8,
         predicate: isStruct,
         fieldTypes: [fieldType, ...otherFieldTypes],
       };
     }
-    case TypeCode.Variant: {
+    case ContainerTypeCode.Variant: {
       return {typeCode, bytePadding: 1, predicate: isVariant};
     }
   }
