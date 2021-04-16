@@ -28,7 +28,7 @@ npm install d-bus-type-system
 - Runs in any ES2020 environment. Uses `ArrayBuffer` and `bigint` under the
   hood.
 - Accurate implementation of the
-  [D-Bus Specification](https://dbus.freedesktop.org/doc/dbus-specification.html).
+  [D-Bus specification](https://dbus.freedesktop.org/doc/dbus-specification.html#type-system).
 
 ## Usage example
 
