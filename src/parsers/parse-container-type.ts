@@ -1,7 +1,7 @@
+import {createArrayType} from '../creators/create-array-type';
+import {createStructType} from '../creators/create-struct-type';
+import {createVariantType} from '../creators/create-variant-type';
 import {CompleteType, ContainerType, ContainerTypeCode} from '../parse';
-import {isArray} from '../predicates/is-array';
-import {isStruct} from '../predicates/is-struct';
-import {isVariant} from '../predicates/is-variant';
 import {StringCursor} from '../string-cursor';
 import {parseCompleteType} from './parse-complete-type';
 import {parseDictEntryType} from './parse-dict-entry-type';
@@ -21,7 +21,7 @@ export function parseContainerType(
         throw new Error(`type=${typeCode}; invalid-element-type`);
       }
 
-      return {typeCode, bytePadding: 4, predicate: isArray, elementType};
+      return createArrayType(elementType);
     }
     case '(': {
       const fieldType = parseCompleteType(signatureCursor);
@@ -44,15 +44,10 @@ export function parseContainerType(
         throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
       }
 
-      return {
-        typeCode: ContainerTypeCode.Struct,
-        bytePadding: 8,
-        predicate: isStruct,
-        fieldTypes: [fieldType, ...otherFieldTypes],
-      };
+      return createStructType([fieldType, ...otherFieldTypes]);
     }
     case ContainerTypeCode.Variant: {
-      return {typeCode, bytePadding: 1, predicate: isVariant};
+      return createVariantType();
     }
   }
 

@@ -1,4 +1,5 @@
 import {BufferWriter} from './buffer-writer';
+import {createBasicType} from './creators/create-basic-type';
 import {
   BasicTypeCode,
   CompleteType,
@@ -7,7 +8,6 @@ import {
   Predicate,
   parse,
 } from './parse';
-import {isString} from './predicates/is-string';
 import {validate} from './validate';
 
 export function marshal<TType extends CompleteType | DictEntryType>(
@@ -148,11 +148,7 @@ export function marshal(
 
         marshal(
           wireFormatWriter,
-          {
-            typeCode: BasicTypeCode.Signature,
-            bytePadding: 1,
-            predicate: isString,
-          },
+          createBasicType(BasicTypeCode.Signature),
           variantSignature,
           `${type.typeCode}[0]`
         );

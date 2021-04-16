@@ -1,4 +1,5 @@
 import {BufferReader} from './buffer-reader';
+import {createBasicType} from './creators/create-basic-type';
 import {
   BasicTypeCode,
   CompleteType,
@@ -7,8 +8,6 @@ import {
   Predicate,
   parse,
 } from './parse';
-import {isNumber} from './predicates/is-number';
-import {isString} from './predicates/is-string';
 import {validate} from './validate';
 
 export function unmarshal<TType extends CompleteType | DictEntryType>(
@@ -71,16 +70,8 @@ export function unmarshal(
         const byteLength = unmarshal(
           wireFormatReader,
           type.typeCode === BasicTypeCode.Signature
-            ? {
-                typeCode: BasicTypeCode.Uint8,
-                bytePadding: 1,
-                predicate: isNumber,
-              }
-            : {
-                typeCode: BasicTypeCode.Uint32,
-                bytePadding: 4,
-                predicate: isNumber,
-              },
+            ? createBasicType(BasicTypeCode.Uint8)
+            : createBasicType(BasicTypeCode.Uint32),
           'byte-length'
         );
 
@@ -111,7 +102,7 @@ export function unmarshal(
 
         const byteLength = unmarshal(
           wireFormatReader,
-          {typeCode: BasicTypeCode.Uint32, bytePadding: 4, predicate: isNumber},
+          createBasicType(BasicTypeCode.Uint32),
           'byte-length'
         );
 
@@ -157,11 +148,7 @@ export function unmarshal(
       case ContainerTypeCode.Variant: {
         const variantSignature = unmarshal(
           wireFormatReader,
-          {
-            typeCode: BasicTypeCode.Signature,
-            bytePadding: 1,
-            predicate: isString,
-          },
+          createBasicType(BasicTypeCode.Signature),
           `${type.typeCode}[0]`
         );
 

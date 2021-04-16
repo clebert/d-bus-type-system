@@ -1,5 +1,5 @@
+import {createDictEntryType} from '../creators/create-dict-entry-type';
 import {ContainerTypeCode, DictEntryType} from '../parse';
-import {isDictEntry} from '../predicates/is-dict-entry';
 import {StringCursor} from '../string-cursor';
 import {parseBasicType} from './parse-basic-type';
 import {parseCompleteType} from './parse-complete-type';
@@ -33,13 +33,7 @@ export function parseDictEntryType(
         throw new Error(`type=${ContainerTypeCode.DictEntry}; unexpected-end`);
       }
 
-      return {
-        typeCode: ContainerTypeCode.DictEntry,
-        bytePadding: 8,
-        predicate: isDictEntry,
-        keyType,
-        valueType,
-      };
+      return createDictEntryType(keyType, valueType);
     }
   }
 
