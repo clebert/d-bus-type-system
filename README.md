@@ -12,7 +12,7 @@
 [types-badge]: https://badgen.net/npm/types/d-bus-type-system
 [types-link]: https://github.com/clebert/d-bus-type-system
 
-> A TypeScript implementation of the D-Bus type system with 100% test coverage.
+> A TypeScript implementation of the D-Bus type system.
 
 ## Installation
 
