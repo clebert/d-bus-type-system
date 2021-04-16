@@ -5,19 +5,9 @@ import {
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-  Predicate,
   parse,
 } from './parse';
 import {validate} from './validate';
-
-export function marshal<TType extends CompleteType | DictEntryType<any, any>>(
-  wireFormatWriter: BufferWriter,
-  type: TType,
-  value: unknown,
-  typeName?: string
-): asserts value is TType['predicate'] extends Predicate<infer TValue>
-  ? TValue
-  : never;
 
 export function marshal(
   wireFormatWriter: BufferWriter,

@@ -1,3 +1,4 @@
+import {assert} from './assert';
 import {BufferReader} from './buffer-reader';
 import {createBasicType} from './creators/create-basic-type';
 import {
@@ -5,16 +6,9 @@ import {
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-  Predicate,
   parse,
 } from './parse';
 import {validate} from './validate';
-
-export function unmarshal<TType extends CompleteType | DictEntryType<any, any>>(
-  wireFormatReader: BufferReader,
-  type: TType,
-  typeName?: string
-): TType['predicate'] extends Predicate<infer TValue> ? TValue : never;
 
 export function unmarshal(
   wireFormatReader: BufferReader,
@@ -67,13 +61,18 @@ export function unmarshal(
       case BasicTypeCode.String:
       case BasicTypeCode.ObjectPath:
       case BasicTypeCode.Signature: {
-        const byteLength = unmarshal(
-          wireFormatReader,
+        const byteLengthType =
           type.typeCode === BasicTypeCode.Signature
             ? createBasicType(BasicTypeCode.Uint8)
-            : createBasicType(BasicTypeCode.Uint32),
+            : createBasicType(BasicTypeCode.Uint32);
+
+        const byteLength = unmarshal(
+          wireFormatReader,
+          byteLengthType,
           'byte-length'
         );
+
+        assert(byteLengthType, byteLength);
 
         const value = new TextDecoder().decode(
           wireFormatReader.readBytes(byteLength)
@@ -99,12 +98,15 @@ export function unmarshal(
       }
       case ContainerTypeCode.Array: {
         const {byteOffset} = wireFormatReader;
+        const byteLengthType = createBasicType(BasicTypeCode.Uint32);
 
         const byteLength = unmarshal(
           wireFormatReader,
-          createBasicType(BasicTypeCode.Uint32),
+          byteLengthType,
           'byte-length'
         );
+
+        assert(byteLengthType, byteLength);
 
         try {
           wireFormatReader.align(type.elementType.bytePadding);
@@ -146,11 +148,15 @@ export function unmarshal(
         );
       }
       case ContainerTypeCode.Variant: {
+        const variantSignatureType = createBasicType(BasicTypeCode.Signature);
+
         const variantSignature = unmarshal(
           wireFormatReader,
-          createBasicType(BasicTypeCode.Signature),
+          variantSignatureType,
           `${type.typeCode}[0]`
         );
+
+        assert(variantSignatureType, variantSignature);
 
         return validate(type, [
           variantSignature,

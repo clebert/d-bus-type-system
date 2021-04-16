@@ -96,7 +96,10 @@ export interface SignatureType {
   readonly predicate: Predicate<string>;
 }
 
-export type ContainerType = ArrayType<any> | StructType<any, any> | VariantType;
+export type ContainerType =
+  | ArrayType<any>
+  | StructType<readonly [any, ...any[]]>
+  | VariantType;
 
 export interface ArrayType<
   TElementType extends CompleteType | DictEntryType<any, any>
@@ -108,13 +111,12 @@ export interface ArrayType<
 }
 
 export interface StructType<
-  TFieldType extends CompleteType,
-  TOtherFieldTypes extends readonly CompleteType[]
+  TFieldTypes extends readonly [CompleteType, ...CompleteType[]]
 > {
   readonly typeCode: ContainerTypeCode.Struct;
   readonly bytePadding: 8;
   readonly predicate: Predicate<readonly [unknown, ...unknown[]]>;
-  readonly fieldTypes: readonly [TFieldType, ...TOtherFieldTypes];
+  readonly fieldTypes: TFieldTypes;
 }
 
 export interface VariantType {

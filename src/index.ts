@@ -1,3 +1,4 @@
+export * from './assert';
 export * from './buffer-reader';
 export * from './buffer-writer';
 export * from './creators/create-array-type';
