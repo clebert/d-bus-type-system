@@ -282,7 +282,8 @@ test('various unmarshalling errors', () => {
 
 test('various marshalling errors', () => {
   const testCases: readonly [string, 'le' | 'be', 0 | 1, unknown, string][] = [
-    ['z', 'le', 0, 'foo', 'signature; invalid-value="z"'],
+    ['z', 'le', 0, 'foo', 'signature="z"; offset=0; expected-complete-type'],
+    ['{yn}', 'le', 0, [19, 85], 'signature="{yn}"; offset=0; expected-complete-type'],
 
     ['y', 'le', 0, 'foo', 'type=y; invalid-value="foo"'],
     ['n', 'le', 0, 'foo', 'type=n; invalid-value="foo"'],
@@ -304,19 +305,19 @@ test('various marshalling errors', () => {
 
     ['g', 'le', 0, 42, 'type=g; invalid-value=42'],
 
-    ['a', 'le', 0, [], 'signature; type=a; invalid-element-type'],
-    ['az', 'le', 0, [], 'signature; type=a; invalid-element-type'],
+    ['a', 'le', 0, [], 'signature="a"; offset=1; type=a; invalid-element-type'],
+    ['az', 'le', 0, [], 'signature="az"; offset=1; type=a; invalid-element-type'],
 
     ['ay', 'le', 0, {}, 'type=a; invalid-value={}'],
     ['ay', 'le', 0, ['foo'], 'type=a; type=y=a[0]; invalid-value="foo"'],
 
-    ['a{', 'le', 0, [[19, 85]], 'signature; type=e; invalid-key-type'],
-    ['a{ay', 'le', 0, [[19, 85]], 'signature; type=e; invalid-key-type'],
-    ['a{v', 'le', 0, [[19, 85]], 'signature; type=e; invalid-key-type'],
-    ['a{y', 'le', 0, [[19, 85]], 'signature; type=e; invalid-value-type'],
-    ['a{yz', 'le', 0, [[19, 85]], 'signature; type=e; invalid-value-type'],
-    ['a{yn', 'le', 0, [[19, 85]], 'signature; type=e; unexpected-end'],
-    ['a{ynn', 'le', 0, [[19, 85]], 'signature; type=e; unexpected-end'],
+    ['a{', 'le', 0, [[19, 85]], 'signature="a{"; offset=2; type=e; invalid-key-type'],
+    ['a{ay', 'le', 0, [[19, 85]], 'signature="a{ay"; offset=2; type=e; invalid-key-type'],
+    ['a{v', 'le', 0, [[19, 85]], 'signature="a{v"; offset=2; type=e; invalid-key-type'],
+    ['a{y', 'le', 0, [[19, 85]], 'signature="a{y"; offset=3; type=e; invalid-value-type'],
+    ['a{yz', 'le', 0, [[19, 85]], 'signature="a{yz"; offset=3; type=e; invalid-value-type'],
+    ['a{yn', 'le', 0, [[19, 85]], 'signature="a{yn"; offset=4; type=e; unexpected-end'],
+    ['a{ynn', 'le', 0, [[19, 85]], 'signature="a{ynn"; offset=4; type=e; unexpected-end'],
 
     ['a{yn}', 'le', 0, [{}], 'type=a; type=e=a[0]; invalid-value={}'],
     ['a{yn}', 'le', 0, [[]], 'type=a; type=e=a[0]; invalid-value=[]'],
@@ -325,12 +326,12 @@ test('various marshalling errors', () => {
     ['a{yn}', 'le', 0, [['foo', 85]], 'type=a; type=e=a[0]; type=y=e[0]; invalid-value="foo"'],
     ['a{yn}', 'le', 0, [[19, 'foo']], 'type=a; type=e=a[0]; type=n=e[1]; invalid-value="foo"'],
 
-    ['(', 'le', 0, [], 'signature; type=r; invalid-field-type'],
-    ['()', 'le', 0, [], 'signature; type=r; invalid-field-type'],
-    ['(z)', 'le', 0, [], 'signature; type=r; invalid-field-type'],
-    ['(y', 'le', 0, [], 'signature; type=r; invalid-field-type'],
-    ['(yz', 'le', 0, [], 'signature; type=r; invalid-field-type'],
-    ['(yzy', 'le', 0, [], 'signature; type=r; invalid-field-type'],
+    ['(', 'le', 0, [], 'signature="("; offset=1; type=r; invalid-field-type'],
+    ['()', 'le', 0, [], 'signature="()"; offset=1; type=r; invalid-field-type'],
+    ['(z)', 'le', 0, [], 'signature="(z)"; offset=1; type=r; invalid-field-type'],
+    ['(y', 'le', 0, [], 'signature="(y"; offset=2; type=r; invalid-field-type'],
+    ['(yz', 'le', 0, [], 'signature="(yz"; offset=2; type=r; invalid-field-type'],
+    ['(yzy', 'le', 0, [], 'signature="(yzy"; offset=2; type=r; invalid-field-type'],
 
     ['(y)', 'le', 0, [], 'type=r; invalid-value=[]'],
     ['(y)', 'le', 0, [19, 85], 'type=r; invalid-number-of-fields=[19,85]; actual=2; expected=1'],
@@ -342,8 +343,8 @@ test('various marshalling errors', () => {
     ['v', 'le', 0, ['foo'], 'type=v; invalid-value=["foo"]'],
     ['v', 'le', 0, [19, 85], 'type=v; invalid-value=[19,85]'],
     ['v', 'le', 0, ['foo', 19, 85], 'type=v; invalid-value=["foo",19,85]'],
-    ['v', 'le', 0, ['foo', 42], 'type=v; signature; invalid-value="foo"'],
-    ['v', 'le', 0, ['nn', 42], 'type=v; signature; invalid-value="nn"'],
+    ['v', 'le', 0, ['foo', 42], 'type=v; signature="foo"; offset=0; expected-complete-type'],
+    ['v', 'le', 0, ['nn', 42], 'type=v; signature="nn"; offset=1; expected-end'],
     ['v', 'le', 0, ['s', 42], 'type=v; type=s=v[1]; invalid-value=42'],
   ];
 

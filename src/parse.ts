@@ -149,16 +149,27 @@ export enum TypeCode {
 export type Predicate<TValue> = (value: unknown) => value is TValue;
 
 export function parse(signature: string): CompleteType {
+  const signatureCursor = new StringCursor(signature);
+
   try {
-    const signatureCursor = new StringCursor(signature);
     const type = parseCompleteType(signatureCursor);
 
-    if (!type || signatureCursor.next()) {
-      throw new Error(`invalid-value=${JSON.stringify(signature)}`);
+    if (!type) {
+      throw new Error('expected-complete-type');
+    }
+
+    if (signatureCursor.next()) {
+      signatureCursor.undo();
+
+      throw new Error('expected-end');
     }
 
     return type;
   } catch (error) {
-    throw new Error(`signature; ${error.message}`);
+    throw new Error(
+      `signature=${JSON.stringify(signature)}; offset=${
+        signatureCursor.offset
+      }; ${error.message}`
+    );
   }
 }

@@ -1,23 +1,21 @@
 export class StringCursor {
   readonly #value: string;
 
-  #position: number = 0;
+  #offset: number = 0;
 
   constructor(value: string) {
     this.#value = value;
   }
 
+  get offset(): number {
+    return this.#offset;
+  }
+
   next(): string | undefined {
-    const char = this.#value[this.#position];
-
-    this.#position += 1;
-
-    return char;
+    return this.#value[this.#offset++];
   }
 
   undo(): void {
-    this.#position -= 1;
-
-    return undefined;
+    this.#offset -= 1;
   }
 }

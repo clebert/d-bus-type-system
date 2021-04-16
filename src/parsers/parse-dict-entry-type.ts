@@ -24,6 +24,8 @@ export function parseDictEntryType(
       }
 
       if (signatureCursor.next() !== '}') {
+        signatureCursor.undo();
+
         throw new Error(`type=${TypeCode.DictEntry}; unexpected-end`);
       }
 

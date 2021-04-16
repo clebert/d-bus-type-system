@@ -39,6 +39,8 @@ export function parseContainerType(
       }
 
       if (signatureCursor.next() !== ')') {
+        signatureCursor.undo();
+
         throw new Error(`type=${TypeCode.Struct}; invalid-field-type`);
       }
 
