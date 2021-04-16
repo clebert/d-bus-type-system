@@ -6,7 +6,7 @@ import {parseCompleteType} from './parse-complete-type';
 
 export function parseDictEntryType(
   signatureCursor: StringCursor
-): DictEntryType | undefined {
+): DictEntryType<any, any> | undefined {
   const typeCode = signatureCursor.next();
 
   switch (typeCode) {

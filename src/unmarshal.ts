@@ -10,7 +10,7 @@ import {
 } from './parse';
 import {validate} from './validate';
 
-export function unmarshal<TType extends CompleteType | DictEntryType>(
+export function unmarshal<TType extends CompleteType | DictEntryType<any, any>>(
   wireFormatReader: BufferReader,
   type: TType,
   typeName?: string
@@ -18,7 +18,7 @@ export function unmarshal<TType extends CompleteType | DictEntryType>(
 
 export function unmarshal(
   wireFormatReader: BufferReader,
-  type: CompleteType | DictEntryType,
+  type: CompleteType | DictEntryType<any, any>,
   typeName: string = ''
 ): unknown {
   try {

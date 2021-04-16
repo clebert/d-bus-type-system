@@ -44,7 +44,7 @@ export function parseContainerType(
         throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
       }
 
-      return createStructType([fieldType, ...otherFieldTypes]);
+      return createStructType(fieldType, ...otherFieldTypes);
     }
     case ContainerTypeCode.Variant: {
       return createVariantType();

@@ -6,10 +6,13 @@ import {
 } from '../parse';
 import {isDictEntry} from '../predicates/is-dict-entry';
 
-export function createDictEntryType(
-  keyType: BasicType,
-  valueType: CompleteType
-): DictEntryType {
+export function createDictEntryType<
+  TKeyType extends BasicType,
+  TValueType extends CompleteType
+>(
+  keyType: TKeyType,
+  valueType: TValueType
+): DictEntryType<TKeyType, TValueType> {
   return {
     typeCode: ContainerTypeCode.DictEntry,
     bytePadding: 8,

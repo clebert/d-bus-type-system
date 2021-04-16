@@ -10,7 +10,7 @@ import {
 } from './parse';
 import {validate} from './validate';
 
-export function marshal<TType extends CompleteType | DictEntryType>(
+export function marshal<TType extends CompleteType | DictEntryType<any, any>>(
   wireFormatWriter: BufferWriter,
   type: TType,
   value: unknown,
@@ -21,7 +21,7 @@ export function marshal<TType extends CompleteType | DictEntryType>(
 
 export function marshal(
   wireFormatWriter: BufferWriter,
-  type: CompleteType | DictEntryType,
+  type: CompleteType | DictEntryType<any, any>,
   value: unknown,
   typeName: string = ''
 ): void {

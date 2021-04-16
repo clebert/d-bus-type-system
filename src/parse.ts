@@ -96,20 +96,25 @@ export interface SignatureType {
   readonly predicate: Predicate<string>;
 }
 
-export type ContainerType = ArrayType | StructType | VariantType;
+export type ContainerType = ArrayType<any> | StructType<any, any> | VariantType;
 
-export interface ArrayType {
+export interface ArrayType<
+  TElementType extends CompleteType | DictEntryType<any, any>
+> {
   readonly typeCode: ContainerTypeCode.Array;
   readonly bytePadding: 4;
   readonly predicate: Predicate<readonly unknown[]>;
-  readonly elementType: CompleteType | DictEntryType;
+  readonly elementType: TElementType;
 }
 
-export interface StructType {
+export interface StructType<
+  TFieldType extends CompleteType,
+  TOtherFieldTypes extends readonly CompleteType[]
+> {
   readonly typeCode: ContainerTypeCode.Struct;
   readonly bytePadding: 8;
   readonly predicate: Predicate<readonly [unknown, ...unknown[]]>;
-  readonly fieldTypes: readonly [CompleteType, ...CompleteType[]];
+  readonly fieldTypes: readonly [TFieldType, ...TOtherFieldTypes];
 }
 
 export interface VariantType {
@@ -118,12 +123,15 @@ export interface VariantType {
   readonly predicate: Predicate<readonly [string, unknown]>;
 }
 
-export interface DictEntryType {
+export interface DictEntryType<
+  TKeyType extends BasicType,
+  TValueType extends CompleteType
+> {
   readonly typeCode: ContainerTypeCode.DictEntry;
   readonly bytePadding: 8;
   readonly predicate: Predicate<readonly [unknown, unknown]>;
-  readonly keyType: BasicType;
-  readonly valueType: CompleteType;
+  readonly keyType: TKeyType;
+  readonly valueType: TValueType;
 }
 
 export enum BasicTypeCode {
