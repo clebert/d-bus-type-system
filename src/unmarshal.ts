@@ -32,7 +32,7 @@ export function unmarshal(
         return validate(type, wireFormatReader.readInt32());
       }
       case TypeCode.Uint32:
-      case TypeCode.UnixFD: {
+      case TypeCode.UnixFd: {
         return validate(type, wireFormatReader.readUint32());
       }
       case TypeCode.BigInt64: {

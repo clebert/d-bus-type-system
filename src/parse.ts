@@ -13,7 +13,7 @@ export type BasicType =
   | BigUint64Type
   | Float64Type
   | BooleanType
-  | UnixFDType
+  | UnixFdType
   | StringType
   | ObjectPathType
   | SignatureType;
@@ -72,8 +72,8 @@ export interface BooleanType {
   readonly predicate: Predicate<boolean>;
 }
 
-export interface UnixFDType {
-  readonly typeCode: TypeCode.UnixFD;
+export interface UnixFdType {
+  readonly typeCode: TypeCode.UnixFd;
   readonly bytePadding: 4;
   readonly predicate: Predicate<number>;
 }
@@ -136,7 +136,7 @@ export enum TypeCode {
   BigUint64 = 't',
   Float64 = 'd',
   Boolean = 'b',
-  UnixFD = 'h',
+  UnixFd = 'h',
   String = 's',
   ObjectPath = 'o',
   Signature = 'g',

@@ -24,7 +24,7 @@ export function parseBasicType(
     }
     case TypeCode.Int32:
     case TypeCode.Uint32:
-    case TypeCode.UnixFD: {
+    case TypeCode.UnixFd: {
       return {typeCode, bytePadding: 4, predicate: isNumber};
     }
     case TypeCode.Boolean: {

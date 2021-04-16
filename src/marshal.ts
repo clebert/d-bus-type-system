@@ -43,7 +43,7 @@ export function marshal(
         return;
       }
       case TypeCode.Uint32:
-      case TypeCode.UnixFD: {
+      case TypeCode.UnixFd: {
         wireFormatWriter.writeUint32(validate(type, value));
 
         return;
