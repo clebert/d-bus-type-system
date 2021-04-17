@@ -9,4 +9,3 @@ export * from './creators/create-variant-type';
 export * from './marshal';
 export * from './parse';
 export * from './unmarshal';
-export * from './validate';

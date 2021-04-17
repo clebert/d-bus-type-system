@@ -8,7 +8,6 @@ import {
   DictEntryType,
   parse,
 } from './parse';
-import {validate} from './validate';
 
 export function unmarshal(
   wireFormatReader: BufferReader,
@@ -20,40 +19,40 @@ export function unmarshal(
 
     switch (type.typeCode) {
       case BasicTypeCode.Uint8: {
-        return validate(type, wireFormatReader.readUint8());
+        return wireFormatReader.readUint8();
       }
       case BasicTypeCode.Int16: {
-        return validate(type, wireFormatReader.readInt16());
+        return wireFormatReader.readInt16();
       }
       case BasicTypeCode.Uint16: {
-        return validate(type, wireFormatReader.readUint16());
+        return wireFormatReader.readUint16();
       }
       case BasicTypeCode.Int32: {
-        return validate(type, wireFormatReader.readInt32());
+        return wireFormatReader.readInt32();
       }
       case BasicTypeCode.Uint32:
       case BasicTypeCode.UnixFd: {
-        return validate(type, wireFormatReader.readUint32());
+        return wireFormatReader.readUint32();
       }
       case BasicTypeCode.BigInt64: {
-        return validate(type, wireFormatReader.readBigInt64());
+        return wireFormatReader.readBigInt64();
       }
       case BasicTypeCode.BigUint64: {
-        return validate(type, wireFormatReader.readBigUint64());
+        return wireFormatReader.readBigUint64();
       }
       case BasicTypeCode.Float64: {
-        return validate(type, wireFormatReader.readFloat64());
+        return wireFormatReader.readFloat64();
       }
       case BasicTypeCode.Boolean: {
         const {byteOffset} = wireFormatReader;
         const value = wireFormatReader.readUint32();
 
         if (value === 1) {
-          return validate(type, true);
+          return true;
         }
 
         if (value === 0) {
-          return validate(type, false);
+          return false;
         }
 
         throw new Error(`byte-offset=${byteOffset}; invalid-value=${value}`);
@@ -61,21 +60,16 @@ export function unmarshal(
       case BasicTypeCode.String:
       case BasicTypeCode.ObjectPath:
       case BasicTypeCode.Signature: {
-        const byteLengthType =
-          type.typeCode === BasicTypeCode.Signature
-            ? createBasicType(BasicTypeCode.Uint8)
-            : createBasicType(BasicTypeCode.Uint32);
-
         const byteLength = unmarshal(
           wireFormatReader,
-          byteLengthType,
+          type.typeCode === BasicTypeCode.Signature
+            ? createBasicType(BasicTypeCode.Uint8)
+            : createBasicType(BasicTypeCode.Uint32),
           'byte-length'
         );
 
-        assert(byteLengthType, byteLength);
-
         const value = new TextDecoder().decode(
-          wireFormatReader.readBytes(byteLength)
+          wireFormatReader.readBytes(byteLength as number)
         );
 
         const nulByteIndex = value.indexOf('\u0000');
@@ -94,19 +88,18 @@ export function unmarshal(
           throw new Error(`byte-offset=${byteOffset}; expected-nul-byte`);
         }
 
-        return validate(type, value);
+        assert(type, value, true);
+
+        return value;
       }
       case ContainerTypeCode.Array: {
         const {byteOffset} = wireFormatReader;
-        const byteLengthType = createBasicType(BasicTypeCode.Uint32);
 
         const byteLength = unmarshal(
           wireFormatReader,
-          byteLengthType,
+          createBasicType(BasicTypeCode.Uint32),
           'byte-length'
         );
-
-        assert(byteLengthType, byteLength);
 
         try {
           wireFormatReader.align(type.elementType.bytePadding);
@@ -116,7 +109,9 @@ export function unmarshal(
           );
         }
 
-        const finalByteOffset = wireFormatReader.byteOffset + byteLength;
+        const finalByteOffset =
+          wireFormatReader.byteOffset + (byteLength as number);
+
         const elements: unknown[] = [];
 
         while (wireFormatReader.byteOffset < finalByteOffset) {
@@ -132,51 +127,51 @@ export function unmarshal(
         if (wireFormatReader.byteOffset > finalByteOffset) {
           throw new Error(
             `byte-offset=${byteOffset}; invalid-byte-length; actual=${
-              byteLength + (wireFormatReader.byteOffset - finalByteOffset)
+              (byteLength as number) +
+              (wireFormatReader.byteOffset - finalByteOffset)
             }; expected=${byteLength}`
           );
         }
 
-        return validate(type, elements);
+        return elements;
       }
       case ContainerTypeCode.Struct: {
-        return validate(
-          type,
-          type.fieldTypes.map((fieldType, index) =>
-            unmarshal(wireFormatReader, fieldType, `${type.typeCode}[${index}]`)
-          )
+        return type.fieldTypes.map((fieldType, index) =>
+          unmarshal(wireFormatReader, fieldType, `${type.typeCode}[${index}]`)
         );
       }
       case ContainerTypeCode.Variant: {
-        const variantSignatureType = createBasicType(BasicTypeCode.Signature);
-
         const variantSignature = unmarshal(
           wireFormatReader,
-          variantSignatureType,
+          createBasicType(BasicTypeCode.Signature),
           `${type.typeCode}[0]`
         );
 
-        assert(variantSignatureType, variantSignature);
-
-        return validate(type, [
+        const value = [
           variantSignature,
           unmarshal(
             wireFormatReader,
-            parse(variantSignature),
+            parse(variantSignature as string),
             `${type.typeCode}[1]`
           ),
-        ]);
+        ];
+
+        return value;
       }
       case ContainerTypeCode.DictEntry: {
-        return validate(type, [
+        return [
           unmarshal(wireFormatReader, type.keyType, `${type.typeCode}[0]`),
           unmarshal(wireFormatReader, type.valueType, `${type.typeCode}[1]`),
-        ]);
+        ];
       }
     }
   } catch (error) {
-    throw new Error(
-      `type=${type.typeCode}${typeName ? `=${typeName}` : ''}; ${error.message}`
-    );
+    throw error.message.startsWith(`type=${type.typeCode};`)
+      ? error
+      : new Error(
+          `type=${type.typeCode}${typeName ? `=${typeName}` : ''}; ${
+            error.message
+          }`
+        );
   }
 }
