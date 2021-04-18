@@ -8,4 +8,5 @@ export * from './creators/create-struct-type';
 export * from './creators/create-variant-type';
 export * from './marshal';
 export * from './parse';
+export * from './serialize';
 export * from './unmarshal';

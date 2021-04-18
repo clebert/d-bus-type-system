@@ -1,6 +1,12 @@
 import {TextDecoder, TextEncoder} from 'util';
 import {BufferReader, BufferReaderOptions, BufferWriter, BufferWriterOptions, marshal, parse, unmarshal} from '.';
-import {BasicTypeCode} from './parse';
+import {createArrayType} from './creators/create-array-type';
+import {createBasicType} from './creators/create-basic-type';
+import {createDictEntryType} from './creators/create-dict-entry-type';
+import {createStructType} from './creators/create-struct-type';
+import {createVariantType} from './creators/create-variant-type';
+import {BasicTypeCode, CompleteType} from './parse';
+import {serialize} from './serialize';
 
 global.TextDecoder = TextDecoder as any;
 global.TextEncoder = TextEncoder;
@@ -22,9 +28,17 @@ function toBuffer(...bytes: string[]): ArrayBuffer {
 }
 
 test('marshal values of all types and unmarshal them again', () => {
-  const testCases: readonly [string, 'le' | 'be', 0 | 1, string, unknown][] = [
+  const testCases: readonly [CompleteType | string, 'le' | 'be', 0 | 1, string, unknown][] = [
     [
-      '(yyyyuua(yv))',
+      createStructType(
+        createBasicType(BasicTypeCode.Uint8),
+        createBasicType(BasicTypeCode.Uint8),
+        createBasicType(BasicTypeCode.Uint8),
+        createBasicType(BasicTypeCode.Uint8),
+        createBasicType(BasicTypeCode.Uint32),
+        createBasicType(BasicTypeCode.Uint32),
+        createArrayType(createStructType(createBasicType(BasicTypeCode.Uint8), createVariantType()))
+      ),
       'le',
       0,
       toBytes(
@@ -55,77 +69,98 @@ test('marshal values of all types and unmarshal them again', () => {
       ],
     ],
 
+    [createBasicType(BasicTypeCode.Uint8), 'le', 0, 'ff', 255],
     ['y', 'le', 0, 'ff', 255],
     ['y', 'le', 0, '7f', 127],
     ['y', 'be', 0, '7f', 127],
     ['y', 'le', 1, '00 ff', 255],
 
+    [createBasicType(BasicTypeCode.Int16), 'le', 0, 'ff ff', -1],
     ['n', 'le', 0, 'ff ff', -1],
     ['n', 'le', 0, 'ff 7f', 32767],
     ['n', 'be', 0, 'ff 7f', -129],
     ['n', 'le', 1, '00 00 ff ff', -1],
 
+    [createBasicType(BasicTypeCode.Uint16), 'le', 0, 'ff ff', 65535],
     ['q', 'le', 0, 'ff ff', 65535],
     ['q', 'le', 0, 'ff 7f', 32767],
     ['q', 'be', 0, 'ff 7f', 65407],
     ['q', 'le', 1, '00 00 ff ff', 65535],
 
+    [createBasicType(BasicTypeCode.Int32), 'le', 0, 'ff ff ff ff', -1],
     ['i', 'le', 0, 'ff ff ff ff', -1],
     ['i', 'le', 0, 'ff ff ff 7f', 2147483647],
     ['i', 'be', 0, 'ff ff ff 7f', -129],
     ['i', 'le', 1, '00 00 00 00 ff ff ff ff', -1],
 
+    [createBasicType(BasicTypeCode.Uint32), 'le', 0, 'ff ff ff ff', 4294967295],
     ['u', 'le', 0, 'ff ff ff ff', 4294967295],
     ['u', 'le', 0, 'ff ff ff 7f', 2147483647],
     ['u', 'be', 0, 'ff ff ff 7f', 4294967167],
     ['u', 'le', 1, '00 00 00 00 ff ff ff ff', 4294967295],
 
+    [createBasicType(BasicTypeCode.BigInt64), 'le', 0, 'ff ff ff ff ff ff ff ff', -1n],
     ['x', 'le', 0, 'ff ff ff ff ff ff ff ff', -1n],
     ['x', 'le', 0, 'ff ff ff ff ff ff ff 7f', 9223372036854775807n],
     ['x', 'be', 0, 'ff ff ff ff ff ff ff 7f', -129n],
     ['x', 'le', 1, '00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff', -1n],
 
+    [createBasicType(BasicTypeCode.BigUint64), 'le', 0, 'ff ff ff ff ff ff ff ff', 18446744073709551615n],
     ['t', 'le', 0, 'ff ff ff ff ff ff ff ff', 18446744073709551615n],
     ['t', 'le', 0, 'ff ff ff ff ff ff ff 7f', 9223372036854775807n],
     ['t', 'be', 0, 'ff ff ff ff ff ff ff 7f', 18446744073709551487n],
     ['t', 'le', 1, '00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff', 18446744073709551615n],
 
+    [createBasicType(BasicTypeCode.Float64), 'le', 0, '00 10 00 00 00 00 00 00', 2.0237e-320],
     ['d', 'le', 0, '00 10 00 00 00 00 00 00', 2.0237e-320],
     ['d', 'be', 0, '00 10 00 00 00 00 00 00', 2.2250738585072014e-308],
     ['d', 'le', 1, '00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00', 2.0237e-320],
 
+    [createBasicType(BasicTypeCode.Boolean), 'le', 0, '01 00 00 00', true],
     ['b', 'le', 0, '01 00 00 00', true],
     ['b', 'le', 0, '00 00 00 00', false],
     ['b', 'be', 0, '00 00 00 01', true],
     ['b', 'le', 1, '00 00 00 00 01 00 00 00', true],
 
+    [createBasicType(BasicTypeCode.UnixFd), 'le', 0, 'ff ff ff ff', 4294967295],
     ['h', 'le', 0, 'ff ff ff ff', 4294967295],
     ['h', 'le', 0, 'ff ff ff 7f', 2147483647],
     ['h', 'be', 0, 'ff ff ff 7f', 4294967167],
     ['h', 'le', 1, '00 00 00 00 ff ff ff ff', 4294967295],
 
+    [createBasicType(BasicTypeCode.String), 'le', 0, '00 00 00 00 00', ''],
     ['s', 'le', 0, '00 00 00 00 00', ''],
     ['s', 'le', 0, '03 00 00 00 66 6f 6f 00', 'foo'],
     ['s', 'be', 0, '00 00 00 03 66 6f 6f 00', 'foo'],
     ['s', 'le', 1, '00 00 00 00 03 00 00 00 66 6f 6f 00', 'foo'],
 
+    [createBasicType(BasicTypeCode.ObjectPath), 'le', 0, '01 00 00 00 2f 00', '/'],
     ['o', 'le', 0, '01 00 00 00 2f 00', '/'],
     ['o', 'be', 0, '00 00 00 01 2f 00', '/'],
     ['o', 'le', 0, '06 00 00 00 2f 61 5f 42 5f 30 00', '/a_B_0'],
     ['o', 'le', 0, '0c 00 00 00 2f 61 5f 42 5f 30 2f 78 5f 5a 5f 39 00', '/a_B_0/x_Z_9'],
     ['o', 'be', 1, '00 00 00 00 00 00 00 01 2f 00', '/'],
 
+    [createBasicType(BasicTypeCode.Signature), 'le', 0, '00 00', ''],
     ['g', 'le', 0, '00 00', ''],
     ['g', 'le', 0, '03 66 6f 6f 00', 'foo'],
     ['g', 'be', 0, '03 66 6f 6f 00', 'foo'],
     ['g', 'le', 1, '00 03 66 6f 6f 00', 'foo'],
 
+    [createArrayType(createBasicType(BasicTypeCode.Int16)), 'le', 0, '00 00 00 00', []],
     ['an', 'le', 0, '00 00 00 00', []],
     ['an', 'le', 0, '06 00 00 00 00 00 01 00 02 00', [0, 1, 2]],
     ['an', 'be', 0, '00 00 00 06 00 00 00 01 00 02', [0, 1, 2]],
     ['an', 'le', 1, '00 00 00 00 00 00 00 00', []],
     ['an', 'le', 1, '00 00 00 00 06 00 00 00 00 00 01 00 02 00', [0, 1, 2]],
 
+    [
+      createArrayType(createDictEntryType(createBasicType(BasicTypeCode.Uint8), createBasicType(BasicTypeCode.Int16))),
+      'le',
+      0,
+      '00 00 00 00 00 00 00 00',
+      [],
+    ],
     ['a{yn}', 'le', 0, '00 00 00 00 00 00 00 00', []],
     ['a{ny}', 'le', 0, '00 00 00 00 00 00 00 00', []],
     ['a{yn}', 'le', 0, '04 00 00 00 00 00 00 00 13 00 55 00', [[19, 85]]],
@@ -134,20 +169,29 @@ test('marshal values of all types and unmarshal them again', () => {
     ['a{yn}', 'le', 1, '00 00 00 00 00 00 00 00', []],
     ['a{yn}', 'le', 1, '00 00 00 00 04 00 00 00 13 00 55 00', [[19, 85]]],
 
+    [createStructType(createBasicType(BasicTypeCode.Int16)), 'le', 0, '2a 00', [42]],
     ['(n)', 'le', 0, '2a 00', [42]],
     ['(n)', 'be', 0, '00 2a', [42]],
     ['(n)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00', [42]],
 
+    [
+      createStructType(createBasicType(BasicTypeCode.Uint32), createBasicType(BasicTypeCode.Uint32), createBasicType(BasicTypeCode.Uint32)),
+      'le',
+      0,
+      '2a 00 00 00 ff ff ff ff c1 07 00 00',
+      [42, 4294967295, 1985],
+    ],
     ['(uuu)', 'le', 0, '2a 00 00 00 ff ff ff ff c1 07 00 00', [42, 4294967295, 1985]],
     ['(uuu)', 'be', 0, '00 00 00 2a ff ff ff ff 00 00 07 c1', [42, 4294967295, 1985]],
     ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00 00 00 ff ff ff ff c1 07 00 00', [42, 4294967295, 1985]],
 
+    [createVariantType(), 'le', 0, '01 6e 00 00 2a 00', [BasicTypeCode.Int16, 42]],
     ['v', 'le', 0, '01 6e 00 00 2a 00', [BasicTypeCode.Int16, 42]],
     ['v', 'be', 0, '01 6e 00 00 00 2a', [BasicTypeCode.Int16, 42]],
     ['v', 'le', 1, '00 01 6e 00 2a 00', [BasicTypeCode.Int16, 42]],
   ];
 
-  for (const [signature, endianness, byteOffset, bytes, value] of testCases) {
+  for (const [typeOrSignature, endianness, byteOffset, bytes, value] of testCases) {
     const littleEndian = endianness === 'le';
 
     let options: (BufferWriterOptions & BufferReaderOptions) | undefined;
@@ -161,7 +205,16 @@ test('marshal values of all types and unmarshal them again', () => {
     }
 
     const wireFormatWriter = new BufferWriter(options);
-    const type = parse(signature);
+
+    let type: CompleteType;
+
+    if (typeof typeOrSignature === 'string') {
+      type = parse(typeOrSignature);
+    } else {
+      type = typeOrSignature;
+
+      expect(parse(serialize(type))).toEqual(type);
+    }
 
     marshal(wireFormatWriter, type, value);
     expect(toBytes(wireFormatWriter.buffer)).toBe(bytes);
