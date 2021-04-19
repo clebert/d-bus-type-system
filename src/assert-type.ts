@@ -7,7 +7,7 @@ import {
   Predicate,
   StructType,
   VariantType,
-} from './parse-type';
+} from './types';
 
 export type CompleteValue<TType extends CompleteType> = TType extends BasicType
   ? BasicValue<TType>

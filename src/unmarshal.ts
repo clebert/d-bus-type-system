@@ -1,13 +1,15 @@
 import {assertType} from './assert-type';
 import {BufferReader} from './buffer-reader';
-import {createBasicType} from './creators/create-basic-type';
+import {parseType} from './parse-type';
 import {
   BasicTypeCode,
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-  parseType,
-} from './parse-type';
+  signatureType,
+  uint32Type,
+  uint8Type,
+} from './types';
 
 export function unmarshal(
   wireFormatReader: BufferReader,
@@ -62,9 +64,7 @@ export function unmarshal(
       case BasicTypeCode.Signature: {
         const byteLength = unmarshal(
           wireFormatReader,
-          type.typeCode === BasicTypeCode.Signature
-            ? createBasicType(BasicTypeCode.Uint8)
-            : createBasicType(BasicTypeCode.Uint32),
+          type.typeCode === BasicTypeCode.Signature ? uint8Type : uint32Type,
           'byte-length'
         );
 
@@ -97,7 +97,7 @@ export function unmarshal(
 
         const byteLength = unmarshal(
           wireFormatReader,
-          createBasicType(BasicTypeCode.Uint32),
+          uint32Type,
           'byte-length'
         );
 
@@ -143,7 +143,7 @@ export function unmarshal(
       case ContainerTypeCode.Variant: {
         const variantSignature = unmarshal(
           wireFormatReader,
-          createBasicType(BasicTypeCode.Signature),
+          signatureType,
           `${type.typeCode}[0]`
         );
 

@@ -1,13 +1,13 @@
 import {assertType} from './assert-type';
 import {BufferWriter} from './buffer-writer';
-import {createBasicType} from './creators/create-basic-type';
+import {parseType} from './parse-type';
 import {
   BasicTypeCode,
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-  parseType,
-} from './parse-type';
+  signatureType,
+} from './types';
 
 export function marshal(
   wireFormatWriter: BufferWriter,
@@ -128,13 +128,7 @@ export function marshal(
       }
       case ContainerTypeCode.Variant: {
         assertType(type, value, true);
-
-        marshal(
-          wireFormatWriter,
-          createBasicType(BasicTypeCode.Signature),
-          value[0]
-        );
-
+        marshal(wireFormatWriter, signatureType, value[0]);
         marshal(wireFormatWriter, parseType(value[0]), value[1]);
 
         return;

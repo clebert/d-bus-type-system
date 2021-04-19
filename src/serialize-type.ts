@@ -1,4 +1,4 @@
-import {CompleteType, ContainerTypeCode, DictEntryType} from './parse-type';
+import {CompleteType, ContainerTypeCode, DictEntryType} from './types';
 
 export function serializeType(
   type: CompleteType | DictEntryType<any, any>

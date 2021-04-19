@@ -1,165 +1,29 @@
-import {parseCompleteType} from './parsers/parse-complete-type';
 import {StringCursor} from './string-cursor';
-
-export type CompleteType = BasicType | ContainerType;
-
-export type BasicType =
-  | Uint8Type
-  | Int16Type
-  | Uint16Type
-  | Int32Type
-  | Uint32Type
-  | BigInt64Type
-  | BigUint64Type
-  | Float64Type
-  | BooleanType
-  | UnixFdType
-  | StringType
-  | ObjectPathType
-  | SignatureType;
-
-export interface Uint8Type {
-  readonly typeCode: BasicTypeCode.Uint8;
-  readonly bytePadding: 1;
-  readonly predicate: Predicate<number>;
-}
-
-export interface Int16Type {
-  readonly typeCode: BasicTypeCode.Int16;
-  readonly bytePadding: 2;
-  readonly predicate: Predicate<number>;
-}
-
-export interface Uint16Type {
-  readonly typeCode: BasicTypeCode.Uint16;
-  readonly bytePadding: 2;
-  readonly predicate: Predicate<number>;
-}
-
-export interface Int32Type {
-  readonly typeCode: BasicTypeCode.Int32;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<number>;
-}
-
-export interface Uint32Type {
-  readonly typeCode: BasicTypeCode.Uint32;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<number>;
-}
-
-export interface BigInt64Type {
-  readonly typeCode: BasicTypeCode.BigInt64;
-  readonly bytePadding: 8;
-  readonly predicate: Predicate<bigint>;
-}
-
-export interface BigUint64Type {
-  readonly typeCode: BasicTypeCode.BigUint64;
-  readonly bytePadding: 8;
-  readonly predicate: Predicate<bigint>;
-}
-
-export interface Float64Type {
-  readonly typeCode: BasicTypeCode.Float64;
-  readonly bytePadding: 8;
-  readonly predicate: Predicate<number>;
-}
-
-export interface BooleanType {
-  readonly typeCode: BasicTypeCode.Boolean;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<boolean>;
-}
-
-export interface UnixFdType {
-  readonly typeCode: BasicTypeCode.UnixFd;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<number>;
-}
-
-export interface StringType {
-  readonly typeCode: BasicTypeCode.String;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<string>;
-}
-
-export interface ObjectPathType {
-  readonly typeCode: BasicTypeCode.ObjectPath;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<string>;
-}
-
-export interface SignatureType {
-  readonly typeCode: BasicTypeCode.Signature;
-  readonly bytePadding: 1;
-  readonly predicate: Predicate<string>;
-}
-
-export type ContainerType =
-  | ArrayType<any>
-  | StructType<readonly [any, ...any[]]>
-  | VariantType;
-
-export interface ArrayType<
-  TElementType extends CompleteType | DictEntryType<any, any>
-> {
-  readonly typeCode: ContainerTypeCode.Array;
-  readonly bytePadding: 4;
-  readonly predicate: Predicate<readonly unknown[]>;
-  readonly elementType: TElementType;
-}
-
-export interface StructType<
-  TFieldTypes extends readonly [CompleteType, ...CompleteType[]]
-> {
-  readonly typeCode: ContainerTypeCode.Struct;
-  readonly bytePadding: 8;
-  readonly predicate: Predicate<readonly [unknown, ...unknown[]]>;
-  readonly fieldTypes: TFieldTypes;
-}
-
-export interface VariantType {
-  readonly typeCode: ContainerTypeCode.Variant;
-  readonly bytePadding: 1;
-  readonly predicate: Predicate<readonly [string, unknown]>;
-}
-
-export interface DictEntryType<
-  TKeyType extends BasicType,
-  TValueType extends CompleteType
-> {
-  readonly typeCode: ContainerTypeCode.DictEntry;
-  readonly bytePadding: 8;
-  readonly predicate: Predicate<readonly [unknown, unknown]>;
-  readonly keyType: TKeyType;
-  readonly valueType: TValueType;
-}
-
-export enum BasicTypeCode {
-  Uint8 = 'y',
-  Int16 = 'n',
-  Uint16 = 'q',
-  Int32 = 'i',
-  Uint32 = 'u',
-  BigInt64 = 'x',
-  BigUint64 = 't',
-  Float64 = 'd',
-  Boolean = 'b',
-  UnixFd = 'h',
-  String = 's',
-  ObjectPath = 'o',
-  Signature = 'g',
-}
-
-export enum ContainerTypeCode {
-  Array = 'a',
-  Struct = 'r', // (...)
-  Variant = 'v',
-  DictEntry = 'e', // {...}
-}
-
-export type Predicate<TValue> = (value: unknown) => value is TValue;
+import {
+  BasicType,
+  BasicTypeCode,
+  CompleteType,
+  ContainerType,
+  ContainerTypeCode,
+  DictEntryType,
+  arrayType,
+  bigInt64Type,
+  bigUint64Type,
+  booleanType,
+  dictEntryType,
+  float64Type,
+  int16Type,
+  int32Type,
+  objectPathType,
+  signatureType,
+  stringType,
+  structType,
+  uint16Type,
+  uint32Type,
+  uint8Type,
+  unixFdType,
+  variantType,
+} from './types';
 
 export function parseType(signature: string): CompleteType {
   const signatureCursor = new StringCursor(signature);
@@ -185,4 +49,148 @@ export function parseType(signature: string): CompleteType {
       }; ${error.message}`
     );
   }
+}
+
+function parseBasicType(signatureCursor: StringCursor): BasicType | undefined {
+  const typeCode = signatureCursor.next();
+
+  switch (typeCode) {
+    case BasicTypeCode.Uint8: {
+      return uint8Type;
+    }
+    case BasicTypeCode.Int16: {
+      return int16Type;
+    }
+    case BasicTypeCode.Uint16: {
+      return uint16Type;
+    }
+    case BasicTypeCode.Int32: {
+      return int32Type;
+    }
+    case BasicTypeCode.Uint32: {
+      return uint32Type;
+    }
+    case BasicTypeCode.BigInt64: {
+      return bigInt64Type;
+    }
+    case BasicTypeCode.BigUint64: {
+      return bigUint64Type;
+    }
+    case BasicTypeCode.Float64: {
+      return float64Type;
+    }
+    case BasicTypeCode.Boolean: {
+      return booleanType;
+    }
+    case BasicTypeCode.UnixFd: {
+      return unixFdType;
+    }
+    case BasicTypeCode.String: {
+      return stringType;
+    }
+    case BasicTypeCode.ObjectPath: {
+      return objectPathType;
+    }
+    case BasicTypeCode.Signature: {
+      return signatureType;
+    }
+  }
+
+  signatureCursor.undo();
+
+  return undefined;
+}
+
+function parseCompleteType(
+  signatureCursor: StringCursor
+): CompleteType | undefined {
+  return parseBasicType(signatureCursor) ?? parseContainerType(signatureCursor);
+}
+
+function parseContainerType(
+  signatureCursor: StringCursor
+): ContainerType | undefined {
+  const typeCode = signatureCursor.next();
+
+  switch (typeCode) {
+    case ContainerTypeCode.Array: {
+      const elementType =
+        parseCompleteType(signatureCursor) ??
+        parseDictEntryType(signatureCursor);
+
+      if (!elementType) {
+        throw new Error(`type=${typeCode}; invalid-element-type`);
+      }
+
+      return arrayType(elementType);
+    }
+    case '(': {
+      const fieldType = parseCompleteType(signatureCursor);
+
+      if (!fieldType) {
+        throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
+      }
+
+      const otherFieldTypes: CompleteType[] = [];
+
+      let otherFieldType: CompleteType | undefined;
+
+      while ((otherFieldType = parseCompleteType(signatureCursor))) {
+        otherFieldTypes.push(otherFieldType);
+      }
+
+      if (signatureCursor.next() !== ')') {
+        signatureCursor.undo();
+
+        throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
+      }
+
+      return structType(fieldType, ...otherFieldTypes);
+    }
+    case ContainerTypeCode.Variant: {
+      return variantType;
+    }
+  }
+
+  signatureCursor.undo();
+
+  return undefined;
+}
+
+function parseDictEntryType(
+  signatureCursor: StringCursor
+): DictEntryType<any, any> | undefined {
+  const typeCode = signatureCursor.next();
+
+  switch (typeCode) {
+    case '{': {
+      const keyType = parseBasicType(signatureCursor);
+
+      if (!keyType) {
+        throw new Error(
+          `type=${ContainerTypeCode.DictEntry}; invalid-key-type`
+        );
+      }
+
+      const valueType = parseCompleteType(signatureCursor);
+
+      if (!valueType) {
+        throw new Error(
+          `type=${ContainerTypeCode.DictEntry}; invalid-value-type`
+        );
+      }
+
+      if (signatureCursor.next() !== '}') {
+        signatureCursor.undo();
+
+        throw new Error(`type=${ContainerTypeCode.DictEntry}; unexpected-end`);
+      }
+
+      return dictEntryType(keyType, valueType);
+    }
+  }
+
+  signatureCursor.undo();
+
+  return undefined;
 }
