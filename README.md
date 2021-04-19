@@ -35,10 +35,10 @@ npm install d-bus-type-system
 ### Marshal a hello message
 
 ```js
-import {BufferWriter, marshal, parse} from 'd-bus-type-system';
+import {BufferWriter, marshal, parseType} from 'd-bus-type-system';
 
 const wireFormatWriter = new BufferWriter({littleEndian: true});
-const type = parse('(yyyyuua(yv))');
+const type = parseType('(yyyyuua(yv))');
 
 marshal(wireFormatWriter, type, [
   'l'.charCodeAt(0), // endianness

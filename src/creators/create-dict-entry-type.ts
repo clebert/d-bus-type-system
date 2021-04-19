@@ -3,7 +3,7 @@ import {
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-} from '../parse';
+} from '../parse-type';
 import {isDictEntry} from '../predicates/is-dict-entry';
 
 export function createDictEntryType<

@@ -6,8 +6,8 @@ import {
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-  parse,
-} from './parse';
+  parseType,
+} from './parse-type';
 
 export function unmarshal(
   wireFormatReader: BufferReader,
@@ -151,7 +151,7 @@ export function unmarshal(
           variantSignature,
           unmarshal(
             wireFormatReader,
-            parse(variantSignature as string),
+            parseType(variantSignature as string),
             `${type.typeCode}[1]`
           ),
         ];

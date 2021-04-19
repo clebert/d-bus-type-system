@@ -1,4 +1,4 @@
-import {CompleteType, ContainerTypeCode, StructType} from '../parse';
+import {CompleteType, ContainerTypeCode, StructType} from '../parse-type';
 import {isStruct} from '../predicates/is-struct';
 
 export function createStructType<

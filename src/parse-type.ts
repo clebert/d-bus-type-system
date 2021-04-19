@@ -161,7 +161,7 @@ export enum ContainerTypeCode {
 
 export type Predicate<TValue> = (value: unknown) => value is TValue;
 
-export function parse(signature: string): CompleteType {
+export function parseType(signature: string): CompleteType {
   const signatureCursor = new StringCursor(signature);
 
   try {

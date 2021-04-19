@@ -4,12 +4,12 @@ const {
   BufferReader,
   BufferWriter,
   marshal,
-  parse,
+  parseType,
   unmarshal,
 } = require('./lib/cjs');
 
 const wireFormatWriter = new BufferWriter({littleEndian: true});
-const type = parse('(yyyyuua(yv))');
+const type = parseType('(yyyyuua(yv))');
 
 marshal(wireFormatWriter, type, [
   'l'.charCodeAt(0), // endianness

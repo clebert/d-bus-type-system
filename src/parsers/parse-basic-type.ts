@@ -1,5 +1,5 @@
 import {createBasicType} from '../creators/create-basic-type';
-import {BasicType, BasicTypeCode} from '../parse';
+import {BasicType, BasicTypeCode} from '../parse-type';
 import {StringCursor} from '../string-cursor';
 
 export function parseBasicType(

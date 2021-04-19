@@ -1,4 +1,4 @@
-import {CompleteType} from '../parse';
+import {CompleteType} from '../parse-type';
 import {StringCursor} from '../string-cursor';
 import {parseBasicType} from './parse-basic-type';
 import {parseContainerType} from './parse-container-type';

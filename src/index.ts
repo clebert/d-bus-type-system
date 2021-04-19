@@ -7,6 +7,6 @@ export * from './creators/create-dict-entry-type';
 export * from './creators/create-struct-type';
 export * from './creators/create-variant-type';
 export * from './marshal';
-export * from './parse';
-export * from './serialize';
+export * from './parse-type';
+export * from './serialize-type';
 export * from './unmarshal';

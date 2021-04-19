@@ -1,12 +1,21 @@
 import {TextDecoder, TextEncoder} from 'util';
-import {BufferReader, BufferReaderOptions, BufferWriter, BufferWriterOptions, marshal, parse, unmarshal} from '.';
-import {createArrayType} from './creators/create-array-type';
-import {createBasicType} from './creators/create-basic-type';
-import {createDictEntryType} from './creators/create-dict-entry-type';
-import {createStructType} from './creators/create-struct-type';
-import {createVariantType} from './creators/create-variant-type';
-import {BasicTypeCode, CompleteType} from './parse';
-import {serialize} from './serialize';
+import {
+  BasicTypeCode,
+  BufferReader,
+  BufferReaderOptions,
+  BufferWriter,
+  BufferWriterOptions,
+  CompleteType,
+  createArrayType,
+  createBasicType,
+  createDictEntryType,
+  createStructType,
+  createVariantType,
+  marshal,
+  parseType,
+  serializeType,
+  unmarshal,
+} from '.';
 
 global.TextDecoder = TextDecoder as any;
 global.TextEncoder = TextEncoder;
@@ -28,78 +37,7 @@ function toBuffer(...bytes: string[]): ArrayBuffer {
 }
 
 test('marshal values of all types and unmarshal them again', () => {
-  const messageHeaderType = createStructType(
-    createBasicType(BasicTypeCode.Uint8),
-    createBasicType(BasicTypeCode.Uint8),
-    createBasicType(BasicTypeCode.Uint8),
-    createBasicType(BasicTypeCode.Uint8),
-    createBasicType(BasicTypeCode.Uint32),
-    createBasicType(BasicTypeCode.Uint32),
-    createArrayType(createStructType(createBasicType(BasicTypeCode.Uint8), createVariantType()))
-  );
-
   const testCases: readonly [CompleteType | string, 'le' | 'be', 0 | 1, string, unknown][] = [
-    [
-      messageHeaderType,
-      'le',
-      0,
-      toBytes(
-        toBuffer(
-          '6c 01 00 01 00 00 00 00 01 00 00 00 6d 00 00 00',
-          '01 01 6f 00 15 00 00 00 2f 6f 72 67 2f 66 72 65',
-          '65 64 65 73 6b 74 6f 70 2f 44 42 75 73 00 00 00',
-          '02 01 73 00 14 00 00 00 6f 72 67 2e 66 72 65 65',
-          '64 65 73 6b 74 6f 70 2e 44 42 75 73 00 00 00 00',
-          '03 01 73 00 05 00 00 00 48 65 6c 6c 6f 00 00 00',
-          '06 01 73 00 14 00 00 00 6f 72 67 2e 66 72 65 65',
-          '64 65 73 6b 74 6f 70 2e 44 42 75 73 00'
-        )
-      ),
-      [
-        'l'.charCodeAt(0), // endianness
-        1, // message type: method call
-        0, // flags
-        1, // major protocol version
-        0, // length in bytes of the message body
-        1, // serial
-        [
-          [1, ['o', '/org/freedesktop/DBus']], // path
-          [2, ['s', 'org.freedesktop.DBus']], // interface
-          [3, ['s', 'Hello']], // member
-          [6, ['s', 'org.freedesktop.DBus']], // destination
-        ],
-      ],
-    ],
-
-    [
-      messageHeaderType,
-      'le',
-      0,
-      toBytes(
-        toBuffer(
-          '6c 02 01 01  0b 00 00 00  01 00 00 00  3d 00 00 00',
-          '06 01 73 00  06 00 00 00  3a 31 2e 32  35 39 00 00',
-          '05 01 75 00  01 00 00 00  08 01 67 00  01 73 00 00',
-          '07 01 73 00  14 00 00 00  6f 72 67 2e  66 72 65 65',
-          '64 65 73 6b  74 6f 70 2e  44 42 75 73  00'
-        )
-      ),
-      [
-        'l'.charCodeAt(0), // endianness
-        2, // message type: method return
-        1, // flags: no reply expected
-        1, // major protocol version
-        11, // message body length
-        1, // serial
-        [
-          [6, ['s', ':1.259']], // destination
-          [5, ['u', 1]], // reply serial
-          [8, ['g', 's']], // signature of the message body
-          [7, ['s', 'org.freedesktop.DBus']], // sender
-        ],
-      ],
-    ],
-
     [createBasicType(BasicTypeCode.Uint8), 'le', 0, 'ff', 255],
     ['y', 'le', 0, 'ff', 255],
     ['y', 'le', 0, '7f', 127],
@@ -240,11 +178,11 @@ test('marshal values of all types and unmarshal them again', () => {
     let type: CompleteType;
 
     if (typeof typeOrSignature === 'string') {
-      type = parse(typeOrSignature);
+      type = parseType(typeOrSignature);
     } else {
       type = typeOrSignature;
 
-      expect(parse(serialize(type))).toEqual(type);
+      expect(parseType(serializeType(type))).toEqual(type);
     }
 
     marshal(wireFormatWriter, type, value);
@@ -361,7 +299,7 @@ test('various unmarshalling errors', () => {
   for (const [signature, endianness, byteOffset, bytes, message] of testCases) {
     const wireFormatReader = new BufferReader(toBuffer(bytes), {littleEndian: endianness === 'le', byteOffset});
 
-    expect(() => unmarshal(wireFormatReader, parse(signature))).toThrow(new Error(message));
+    expect(() => unmarshal(wireFormatReader, parseType(signature))).toThrow(new Error(message));
   }
 });
 
@@ -436,6 +374,6 @@ test('various marshalling errors', () => {
   for (const [signature, endianness, byteOffset, value, message] of testCases) {
     const wireFormatWriter = new BufferWriter({littleEndian: endianness === 'le', byteOffset});
 
-    expect(() => marshal(wireFormatWriter, parse(signature), value)).toThrow(new Error(message));
+    expect(() => marshal(wireFormatWriter, parseType(signature), value)).toThrow(new Error(message));
   }
 });

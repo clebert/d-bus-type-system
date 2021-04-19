@@ -1,5 +1,5 @@
 import {createDictEntryType} from '../creators/create-dict-entry-type';
-import {ContainerTypeCode, DictEntryType} from '../parse';
+import {ContainerTypeCode, DictEntryType} from '../parse-type';
 import {StringCursor} from '../string-cursor';
 import {parseBasicType} from './parse-basic-type';
 import {parseCompleteType} from './parse-complete-type';

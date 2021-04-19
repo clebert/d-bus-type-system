@@ -6,8 +6,8 @@ import {
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-  parse,
-} from './parse';
+  parseType,
+} from './parse-type';
 
 export function marshal(
   wireFormatWriter: BufferWriter,
@@ -135,7 +135,7 @@ export function marshal(
           value[0]
         );
 
-        marshal(wireFormatWriter, parse(value[0]), value[1]);
+        marshal(wireFormatWriter, parseType(value[0]), value[1]);
 
         return;
       }

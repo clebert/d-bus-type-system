@@ -1,7 +1,7 @@
 import {createArrayType} from '../creators/create-array-type';
 import {createStructType} from '../creators/create-struct-type';
 import {createVariantType} from '../creators/create-variant-type';
-import {CompleteType, ContainerType, ContainerTypeCode} from '../parse';
+import {CompleteType, ContainerType, ContainerTypeCode} from '../parse-type';
 import {StringCursor} from '../string-cursor';
 import {parseCompleteType} from './parse-complete-type';
 import {parseDictEntryType} from './parse-dict-entry-type';

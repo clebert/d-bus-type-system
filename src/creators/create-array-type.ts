@@ -3,7 +3,7 @@ import {
   CompleteType,
   ContainerTypeCode,
   DictEntryType,
-} from '../parse';
+} from '../parse-type';
 import {isArray} from '../predicates/is-array';
 
 export function createArrayType<

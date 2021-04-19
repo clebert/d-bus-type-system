@@ -14,7 +14,7 @@ import {
   Uint32Type,
   Uint8Type,
   UnixFdType,
-} from '../parse';
+} from '../parse-type';
 import {isBigint} from '../predicates/is-bigint';
 import {isBoolean} from '../predicates/is-boolean';
 import {isNumber} from '../predicates/is-number';
