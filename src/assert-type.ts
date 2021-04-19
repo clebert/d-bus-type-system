@@ -50,7 +50,9 @@ export type DictEntryValue<TType> = TType extends DictEntryType<
   ? readonly [BasicValue<TKeyType>, CompleteValue<TValueType>]
   : never;
 
-export function assert<TType extends CompleteType | DictEntryType<any, any>>(
+export function assertType<
+  TType extends CompleteType | DictEntryType<any, any>
+>(
   type: TType,
   value: unknown,
   shallowTypeInference: true,
@@ -59,7 +61,9 @@ export function assert<TType extends CompleteType | DictEntryType<any, any>>(
   ? TValue
   : never;
 
-export function assert<TType extends CompleteType | DictEntryType<any, any>>(
+export function assertType<
+  TType extends CompleteType | DictEntryType<any, any>
+>(
   type: TType,
   value: unknown,
   shallowTypeInference?: false,
@@ -70,7 +74,7 @@ export function assert<TType extends CompleteType | DictEntryType<any, any>>(
   ? DictEntryValue<TType>
   : never;
 
-export function assert(
+export function assertType(
   type: CompleteType | DictEntryType<any, any>,
   value: unknown,
   _shallowTypeInference?: boolean,
@@ -81,7 +85,7 @@ export function assert(
       case ContainerTypeCode.Array: {
         if (type.predicate(value)) {
           value.forEach((element, index) => {
-            assert(
+            assertType(
               type.elementType,
               element,
               true,
@@ -113,7 +117,7 @@ export function assert(
           }
 
           value.forEach((field, index) => {
-            assert(
+            assertType(
               type.fieldTypes[index],
               field,
               true,
@@ -135,8 +139,8 @@ export function assert(
       }
       case ContainerTypeCode.DictEntry: {
         if (type.predicate(value)) {
-          assert(type.keyType, value[0], true, `${type.typeCode}[0]`);
-          assert(type.valueType, value[1], true, `${type.typeCode}[1]`);
+          assertType(type.keyType, value[0], true, `${type.typeCode}[0]`);
+          assertType(type.valueType, value[1], true, `${type.typeCode}[1]`);
 
           return;
         }

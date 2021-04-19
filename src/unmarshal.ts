@@ -1,4 +1,4 @@
-import {assert} from './assert';
+import {assertType} from './assert-type';
 import {BufferReader} from './buffer-reader';
 import {createBasicType} from './creators/create-basic-type';
 import {
@@ -88,7 +88,7 @@ export function unmarshal(
           throw new Error(`byte-offset=${byteOffset}; expected-nul-byte`);
         }
 
-        assert(type, value, true);
+        assertType(type, value, true);
 
         return value;
       }

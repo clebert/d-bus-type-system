@@ -1,4 +1,4 @@
-import {assert} from './assert';
+import {assertType} from './assert-type';
 import {BufferWriter} from './buffer-writer';
 import {createBasicType} from './creators/create-basic-type';
 import {
@@ -19,28 +19,28 @@ export function marshal(
 
     switch (type.typeCode) {
       case BasicTypeCode.Uint8: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeUint8(value);
 
         return;
       }
       case BasicTypeCode.Int16: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeInt16(value);
 
         return;
       }
       case BasicTypeCode.Uint16: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeUint16(value);
 
         return;
       }
       case BasicTypeCode.Int32: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeInt32(value);
 
@@ -48,35 +48,35 @@ export function marshal(
       }
       case BasicTypeCode.Uint32:
       case BasicTypeCode.UnixFd: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeUint32(value);
 
         return;
       }
       case BasicTypeCode.BigInt64: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeBigInt64(value);
 
         return;
       }
       case BasicTypeCode.BigUint64: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeBigUint64(value);
 
         return;
       }
       case BasicTypeCode.Float64: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeFloat64(value);
 
         return;
       }
       case BasicTypeCode.Boolean: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         wireFormatWriter.writeUint32(value ? 1 : 0);
 
@@ -85,7 +85,7 @@ export function marshal(
       case BasicTypeCode.String:
       case BasicTypeCode.ObjectPath:
       case BasicTypeCode.Signature: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         const array = new TextEncoder().encode(value);
 
@@ -100,7 +100,7 @@ export function marshal(
         return;
       }
       case ContainerTypeCode.Array: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         const elementWireFormat = new BufferWriter({
           littleEndian: wireFormatWriter.littleEndian,
@@ -118,7 +118,7 @@ export function marshal(
         return;
       }
       case ContainerTypeCode.Struct: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         for (let i = 0; i < value.length; i += 1) {
           marshal(wireFormatWriter, type.fieldTypes[i]!, value[i]);
@@ -127,7 +127,7 @@ export function marshal(
         return;
       }
       case ContainerTypeCode.Variant: {
-        assert(type, value, true);
+        assertType(type, value, true);
 
         marshal(
           wireFormatWriter,
@@ -140,7 +140,7 @@ export function marshal(
         return;
       }
       case ContainerTypeCode.DictEntry: {
-        assert(type, value, true);
+        assertType(type, value, true);
         marshal(wireFormatWriter, type.keyType, value[0]);
         marshal(wireFormatWriter, type.valueType, value[1]);
 
