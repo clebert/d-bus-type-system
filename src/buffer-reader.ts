@@ -14,7 +14,7 @@ export class BufferReader {
   }
 
   constructor(buffer: ArrayBuffer, options: BufferReaderOptions = {}) {
-    this.buffer = buffer;
+    this.buffer = new Uint8Array(buffer).buffer;
     this.littleEndian = options.littleEndian ?? false;
     this.#byteOffset = options.byteOffset ?? 0;
   }
