@@ -159,6 +159,9 @@ export const signatureType = {
   predicate: (value: unknown): value is string => typeof value === 'string',
 } as const;
 
+const isArray = (value: unknown): value is readonly unknown[] =>
+  Array.isArray(value);
+
 export const arrayType = <
   TElementType extends CompleteType | DictEntryType<any, any>
 >(
@@ -166,9 +169,12 @@ export const arrayType = <
 ): ArrayType<TElementType> => ({
   typeCode: ContainerTypeCode.Array,
   bytePadding: 4,
-  predicate: (value): value is readonly unknown[] => Array.isArray(value),
+  predicate: isArray,
   elementType,
 });
+
+const isStruct = (value: unknown): value is readonly [unknown, ...unknown[]] =>
+  Array.isArray(value) && value.length > 0;
 
 export const structType = <
   TFieldTypes extends readonly [CompleteType, ...CompleteType[]]
@@ -177,17 +183,21 @@ export const structType = <
 ): StructType<TFieldTypes> => ({
   typeCode: ContainerTypeCode.Struct,
   bytePadding: 8,
-  predicate: (value): value is readonly [unknown, ...unknown[]] =>
-    Array.isArray(value) && value.length > 0,
+  predicate: isStruct,
   fieldTypes,
 });
+
+const isVariant = (value: unknown): value is readonly [string, unknown] =>
+  Array.isArray(value) && value.length === 2 && typeof value[0] === 'string';
 
 export const variantType: VariantType = {
   typeCode: ContainerTypeCode.Variant,
   bytePadding: 1,
-  predicate: (value): value is readonly [string, unknown] =>
-    Array.isArray(value) && value.length === 2 && typeof value[0] === 'string',
+  predicate: isVariant,
 };
+
+const isDictEntry = (value: unknown): value is readonly [unknown, unknown] =>
+  Array.isArray(value) && value.length === 2;
 
 export const dictEntryType = <
   TKeyType extends BasicType,
@@ -198,8 +208,7 @@ export const dictEntryType = <
 ): DictEntryType<TKeyType, TValueType> => ({
   typeCode: ContainerTypeCode.DictEntry,
   bytePadding: 8,
-  predicate: (value): value is readonly [unknown, unknown] =>
-    Array.isArray(value) && value.length === 2,
+  predicate: isDictEntry,
   keyType,
   valueType,
 });
