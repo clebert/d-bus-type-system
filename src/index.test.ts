@@ -5,9 +5,16 @@ import {
   BufferReaderOptions,
   BufferWriter,
   BufferWriterOptions,
+  bigInt64Type,
+  bigUint64Type,
+  int16Type,
+  int32Type,
   marshal,
   parseType,
   serializeType,
+  uint16Type,
+  uint32Type,
+  uint8Type,
   unmarshal,
 } from '.';
 
@@ -32,40 +39,50 @@ function toBuffer(...bytes: string[]): ArrayBuffer {
 
 test('marshal values of all types and unmarshal them again', () => {
   const testCases: readonly [string, 'le' | 'be', 0 | 1, string, unknown][] = [
-    ['y', 'le', 0, 'ff', 255],
+    ['y', 'le', 0, '00', uint8Type.minValue],
+    ['y', 'le', 0, 'ff', uint8Type.maxValue],
     ['y', 'le', 0, '7f', 127],
     ['y', 'be', 0, '7f', 127],
-    ['y', 'le', 1, '00 ff', 255],
+    ['y', 'le', 1, '00 ff', uint8Type.maxValue],
 
+    ['n', 'le', 0, '00 00', 0],
     ['n', 'le', 0, 'ff ff', -1],
-    ['n', 'le', 0, 'ff 7f', 32767],
+    ['n', 'le', 0, '00 80', int16Type.minValue],
+    ['n', 'le', 0, 'ff 7f', int16Type.maxValue],
     ['n', 'be', 0, 'ff 7f', -129],
     ['n', 'le', 1, '00 00 ff ff', -1],
 
-    ['q', 'le', 0, 'ff ff', 65535],
+    ['q', 'le', 0, '00 00', uint16Type.minValue],
+    ['q', 'le', 0, 'ff ff', uint16Type.maxValue],
     ['q', 'le', 0, 'ff 7f', 32767],
     ['q', 'be', 0, 'ff 7f', 65407],
-    ['q', 'le', 1, '00 00 ff ff', 65535],
+    ['q', 'le', 1, '00 00 ff ff', uint16Type.maxValue],
 
+    ['i', 'le', 0, '00 00 00 00', 0],
     ['i', 'le', 0, 'ff ff ff ff', -1],
-    ['i', 'le', 0, 'ff ff ff 7f', 2147483647],
+    ['i', 'le', 0, '00 00 00 80', int32Type.minValue],
+    ['i', 'le', 0, 'ff ff ff 7f', int32Type.maxValue],
     ['i', 'be', 0, 'ff ff ff 7f', -129],
     ['i', 'le', 1, '00 00 00 00 ff ff ff ff', -1],
 
-    ['u', 'le', 0, 'ff ff ff ff', 4294967295],
+    ['u', 'le', 0, '00 00 00 00', uint32Type.minValue],
+    ['u', 'le', 0, 'ff ff ff ff', uint32Type.maxValue],
     ['u', 'le', 0, 'ff ff ff 7f', 2147483647],
     ['u', 'be', 0, 'ff ff ff 7f', 4294967167],
-    ['u', 'le', 1, '00 00 00 00 ff ff ff ff', 4294967295],
+    ['u', 'le', 1, '00 00 00 00 ff ff ff ff', uint32Type.maxValue],
 
+    ['x', 'le', 0, '00 00 00 00 00 00 00 00', 0n],
     ['x', 'le', 0, 'ff ff ff ff ff ff ff ff', -1n],
-    ['x', 'le', 0, 'ff ff ff ff ff ff ff 7f', 9223372036854775807n],
+    ['x', 'le', 0, '00 00 00 00 00 00 00 80', bigInt64Type.minValue],
+    ['x', 'le', 0, 'ff ff ff ff ff ff ff 7f', bigInt64Type.maxValue],
     ['x', 'be', 0, 'ff ff ff ff ff ff ff 7f', -129n],
     ['x', 'le', 1, '00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff', -1n],
 
-    ['t', 'le', 0, 'ff ff ff ff ff ff ff ff', 18446744073709551615n],
+    ['t', 'le', 0, '00 00 00 00 00 00 00 00', bigUint64Type.minValue],
+    ['t', 'le', 0, 'ff ff ff ff ff ff ff ff', bigUint64Type.maxValue],
     ['t', 'le', 0, 'ff ff ff ff ff ff ff 7f', 9223372036854775807n],
     ['t', 'be', 0, 'ff ff ff ff ff ff ff 7f', 18446744073709551487n],
-    ['t', 'le', 1, '00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff', 18446744073709551615n],
+    ['t', 'le', 1, '00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff', bigUint64Type.maxValue],
 
     ['d', 'le', 0, '00 10 00 00 00 00 00 00', 2.0237e-320],
     ['d', 'be', 0, '00 10 00 00 00 00 00 00', 2.2250738585072014e-308],
@@ -76,10 +93,11 @@ test('marshal values of all types and unmarshal them again', () => {
     ['b', 'be', 0, '00 00 00 01', true],
     ['b', 'le', 1, '00 00 00 00 01 00 00 00', true],
 
-    ['h', 'le', 0, 'ff ff ff ff', 4294967295],
+    ['h', 'le', 0, '00 00 00 00', uint32Type.minValue],
+    ['h', 'le', 0, 'ff ff ff ff', uint32Type.maxValue],
     ['h', 'le', 0, 'ff ff ff 7f', 2147483647],
     ['h', 'be', 0, 'ff ff ff 7f', 4294967167],
-    ['h', 'le', 1, '00 00 00 00 ff ff ff ff', 4294967295],
+    ['h', 'le', 1, '00 00 00 00 ff ff ff ff', uint32Type.maxValue],
 
     ['s', 'le', 0, '00 00 00 00 00', ''],
     ['s', 'le', 0, '03 00 00 00 66 6f 6f 00', 'foo'],
@@ -265,15 +283,55 @@ test('various marshalling errors', () => {
     ['{yn}', 'le', 0, [19, 85], 'signature="{yn}"; offset=0; expected-complete-type'],
 
     ['y', 'le', 0, 'foo', 'type=y; invalid-value="foo"'],
+    ['y', 'le', 0, NaN, 'type=y; invalid-value=NaN'],
+    ['y', 'le', 0, 0.1, 'type=y; invalid-value=0.1'],
+    ['y', 'le', 0, uint8Type.minValue - 1, 'type=y; invalid-value=-1'],
+    ['y', 'le', 0, uint8Type.maxValue + 1, 'type=y; invalid-value=256'],
+
     ['n', 'le', 0, 'foo', 'type=n; invalid-value="foo"'],
+    ['n', 'le', 0, NaN, 'type=n; invalid-value=NaN'],
+    ['n', 'le', 0, 0.1, 'type=n; invalid-value=0.1'],
+    ['n', 'le', 0, int16Type.minValue - 1, 'type=n; invalid-value=-32769'],
+    ['n', 'le', 0, int16Type.maxValue + 1, 'type=n; invalid-value=32768'],
+
     ['q', 'le', 0, 'foo', 'type=q; invalid-value="foo"'],
+    ['q', 'le', 0, NaN, 'type=q; invalid-value=NaN'],
+    ['q', 'le', 0, 0.1, 'type=q; invalid-value=0.1'],
+    ['q', 'le', 0, uint16Type.minValue - 1, 'type=q; invalid-value=-1'],
+    ['q', 'le', 0, uint16Type.maxValue + 1, 'type=q; invalid-value=65536'],
+
     ['i', 'le', 0, 'foo', 'type=i; invalid-value="foo"'],
+    ['i', 'le', 0, NaN, 'type=i; invalid-value=NaN'],
+    ['i', 'le', 0, 0.1, 'type=i; invalid-value=0.1'],
+    ['i', 'le', 0, int32Type.minValue - 1, 'type=i; invalid-value=-2147483649'],
+    ['i', 'le', 0, int32Type.maxValue + 1, 'type=i; invalid-value=2147483648'],
+
     ['u', 'le', 0, 'foo', 'type=u; invalid-value="foo"'],
+    ['u', 'le', 0, NaN, 'type=u; invalid-value=NaN'],
+    ['u', 'le', 0, 0.1, 'type=u; invalid-value=0.1'],
+    ['u', 'le', 0, uint32Type.minValue - 1, 'type=u; invalid-value=-1'],
+    ['u', 'le', 0, uint32Type.maxValue + 1, 'type=u; invalid-value=4294967296'],
+
     ['x', 'le', 0, 'foo', 'type=x; invalid-value="foo"'],
+    ['x', 'le', 0, bigInt64Type.minValue - 1n, 'type=x; invalid-value=-9223372036854775809'],
+    ['x', 'le', 0, bigInt64Type.maxValue + 1n, 'type=x; invalid-value=9223372036854775808'],
+
     ['t', 'le', 0, 'foo', 'type=t; invalid-value="foo"'],
+    ['t', 'le', 0, bigUint64Type.minValue - 1n, 'type=t; invalid-value=-1'],
+    ['t', 'le', 0, bigUint64Type.maxValue + 1n, 'type=t; invalid-value=18446744073709551616'],
+
     ['d', 'le', 0, 'foo', 'type=d; invalid-value="foo"'],
+    ['d', 'le', 0, Infinity, 'type=d; invalid-value=Infinity'],
+    ['d', 'le', 0, NaN, 'type=d; invalid-value=NaN'],
+
     ['b', 'le', 0, 'foo', 'type=b; invalid-value="foo"'],
+
     ['h', 'le', 0, 'foo', 'type=h; invalid-value="foo"'],
+    ['h', 'le', 0, NaN, 'type=h; invalid-value=NaN'],
+    ['h', 'le', 0, 0.1, 'type=h; invalid-value=0.1'],
+    ['h', 'le', 0, uint32Type.minValue - 1, 'type=h; invalid-value=-1'],
+    ['h', 'le', 0, uint32Type.maxValue + 1, 'type=h; invalid-value=4294967296'],
+
     ['s', 'le', 0, 42, 'type=s; invalid-value=42'],
 
     ['o', 'le', 0, 42, 'type=o; invalid-value=42'],

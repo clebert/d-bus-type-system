@@ -83,49 +83,90 @@ export type Predicate<TValue> = (value: unknown) => value is TValue;
 export const uint8Type = {
   typeCode: BasicTypeCode.Uint8,
   bytePadding: 1,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: (value: unknown): value is number =>
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= uint8Type.minValue &&
+    value <= uint8Type.maxValue,
+  minValue: 0,
+  maxValue: 255,
 } as const;
 
 export const int16Type = {
   typeCode: BasicTypeCode.Int16,
   bytePadding: 2,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: (value: unknown): value is number =>
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= int16Type.minValue &&
+    value <= int16Type.maxValue,
+  minValue: -32768,
+  maxValue: 32767,
 } as const;
 
 export const uint16Type = {
   typeCode: BasicTypeCode.Uint16,
   bytePadding: 2,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: (value: unknown): value is number =>
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= uint16Type.minValue &&
+    value <= uint16Type.maxValue,
+  minValue: 0,
+  maxValue: 65535,
 } as const;
 
 export const int32Type = {
   typeCode: BasicTypeCode.Int32,
   bytePadding: 4,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: (value: unknown): value is number =>
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= int32Type.minValue &&
+    value <= int32Type.maxValue,
+  minValue: -2147483648,
+  maxValue: 2147483647,
 } as const;
 
 export const uint32Type = {
   typeCode: BasicTypeCode.Uint32,
   bytePadding: 4,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: (value: unknown): value is number =>
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= uint32Type.minValue &&
+    value <= uint32Type.maxValue,
+  minValue: 0,
+  maxValue: 4294967295,
 } as const;
 
 export const bigInt64Type = {
   typeCode: BasicTypeCode.BigInt64,
   bytePadding: 8,
-  predicate: (value: unknown): value is bigint => typeof value === 'bigint',
+  predicate: (value: unknown): value is bigint =>
+    typeof value === 'bigint' &&
+    value >= bigInt64Type.minValue &&
+    value <= bigInt64Type.maxValue,
+  minValue: -9223372036854775808n,
+  maxValue: 9223372036854775807n,
 } as const;
 
 export const bigUint64Type = {
   typeCode: BasicTypeCode.BigUint64,
   bytePadding: 8,
-  predicate: (value: unknown): value is bigint => typeof value === 'bigint',
+  predicate: (value: unknown): value is bigint =>
+    typeof value === 'bigint' &&
+    value >= bigUint64Type.minValue &&
+    value <= bigUint64Type.maxValue,
+  minValue: 0n,
+  maxValue: 18446744073709551615n,
 } as const;
 
 export const float64Type = {
   typeCode: BasicTypeCode.Float64,
   bytePadding: 8,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: (value: unknown): value is number =>
+    typeof value === 'number' && Number.isFinite(value),
 } as const;
 
 export const booleanType = {
@@ -137,7 +178,7 @@ export const booleanType = {
 export const unixFdType = {
   typeCode: BasicTypeCode.UnixFd,
   bytePadding: 4,
-  predicate: (value: unknown): value is number => typeof value === 'number',
+  predicate: uint32Type.predicate,
 } as const;
 
 export const stringType = {

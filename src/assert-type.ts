@@ -153,7 +153,13 @@ export function assertType(
       return;
     }
 
-    throw new Error(`invalid-value=${JSON.stringify(value)}`);
+    throw new Error(
+      `invalid-value=${
+        typeof value === 'number' || typeof value === 'bigint'
+          ? value
+          : JSON.stringify(value)
+      }`
+    );
   } catch (error) {
     throw new Error(
       `type=${type.typeCode}${typeName ? `=${typeName}` : ''}; ${error.message}`
