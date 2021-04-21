@@ -27,7 +27,7 @@ export type ArrayValue<TType> = TType extends ArrayType<infer TElementType>
   ? TElementType extends CompleteType
     ? readonly CompleteValue<TElementType>[]
     : TElementType extends DictEntryType<any, any>
-    ? DictEntryValue<TElementType>
+    ? readonly DictEntryValue<TElementType>[]
     : never
   : never;
 
