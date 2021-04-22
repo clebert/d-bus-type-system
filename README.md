@@ -48,9 +48,9 @@ marshal(wireFormatWriter, type, [
   0, // message body length
   1, // serial
   [
-    [1, ['o', '/org/freedesktop/DBus']], // path
-    [2, ['s', 'org.freedesktop.DBus']], // interface
-    [3, ['s', 'Hello']], // member
+    [1, ['o', '/org/freedesktop/DBus']], // object path
+    [2, ['s', 'org.freedesktop.DBus']], // interface name
+    [3, ['s', 'Hello']], // member name
     [6, ['s', 'org.freedesktop.DBus']], // destination
   ],
 ]);
