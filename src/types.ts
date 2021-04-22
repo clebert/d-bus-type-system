@@ -57,7 +57,7 @@ export interface StructType<
 export interface VariantType {
   readonly typeCode: ContainerTypeCode.Variant;
   readonly bytePadding: 1;
-  readonly predicate: Predicate<readonly [string, unknown]>;
+  readonly predicate: Predicate<readonly [CompleteType, unknown]>;
 }
 
 export interface DictEntryType<
@@ -228,8 +228,36 @@ export const structType = <
   fieldTypes,
 });
 
-const isVariant = (value: unknown): value is readonly [string, unknown] =>
-  Array.isArray(value) && value.length === 2 && typeof value[0] === 'string';
+const isVariant = (
+  value: unknown
+): value is readonly [CompleteType, unknown] => {
+  if (!Array.isArray(value) || value.length !== 2) {
+    return false;
+  }
+
+  switch (value[0]?.typeCode) {
+    case BasicTypeCode.Uint8:
+    case BasicTypeCode.Int16:
+    case BasicTypeCode.Uint16:
+    case BasicTypeCode.Int32:
+    case BasicTypeCode.Uint32:
+    case BasicTypeCode.BigInt64:
+    case BasicTypeCode.BigUint64:
+    case BasicTypeCode.Float64:
+    case BasicTypeCode.Boolean:
+    case BasicTypeCode.UnixFd:
+    case BasicTypeCode.String:
+    case BasicTypeCode.ObjectPath:
+    case BasicTypeCode.Signature:
+    case ContainerTypeCode.Array:
+    case ContainerTypeCode.Struct:
+    case ContainerTypeCode.Variant: {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 export const variantType: VariantType = {
   typeCode: ContainerTypeCode.Variant,

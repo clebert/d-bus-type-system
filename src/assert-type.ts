@@ -41,7 +41,7 @@ export type CompleteValues<TTypes extends readonly CompleteType[]> = {
     : never;
 };
 
-export type VariantValue = readonly [string, unknown];
+export type VariantValue = readonly [CompleteType, unknown];
 
 export type DictEntryValue<TType> = TType extends DictEntryType<
   infer TKeyType,
@@ -102,7 +102,7 @@ export function assertType(
         if (type.predicate(value)) {
           if (value.length < type.fieldTypes.length) {
             throw new Error(
-              `invalid-length=${JSON.stringify(value)}; actual=${
+              `invalid-length=${stringify(value)}; actual=${
                 value.length
               }; expected=${type.fieldTypes.length}`
             );
@@ -110,7 +110,7 @@ export function assertType(
 
           if (value.length > type.fieldTypes.length) {
             throw new Error(
-              `invalid-length=${JSON.stringify(value)}; actual=${
+              `invalid-length=${stringify(value)}; actual=${
                 value.length
               }; expected=${type.fieldTypes.length}`
             );
@@ -153,16 +153,33 @@ export function assertType(
       return;
     }
 
-    throw new Error(
-      `invalid-value=${
-        typeof value === 'number' || typeof value === 'bigint'
-          ? value
-          : JSON.stringify(value)
-      }`
-    );
+    throw new Error(`invalid-value=${stringify(value)}`);
   } catch (error) {
     throw new Error(
       `type=${type.typeCode}${typeName ? `=${typeName}` : ''}; ${error.message}`
     );
   }
+}
+
+function stringify(value: unknown): string {
+  switch (typeof value) {
+    case 'bigint':
+    case 'boolean':
+    case 'number': {
+      return String(value);
+    }
+    case 'string': {
+      return JSON.stringify(value);
+    }
+  }
+
+  if (!value) {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map(stringify).join(', ')}]`;
+  }
+
+  return '{...}';
 }

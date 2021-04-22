@@ -1,6 +1,6 @@
 import {assertType} from './assert-type';
 import {BufferWriter} from './buffer-writer';
-import {parseType} from './parse-type';
+import {serializeType} from './serialize-type';
 import {
   BasicTypeCode,
   CompleteType,
@@ -128,8 +128,8 @@ export function marshal(
       }
       case ContainerTypeCode.Variant: {
         assertType(type, value, true);
-        marshal(wireFormatWriter, signatureType, value[0]);
-        marshal(wireFormatWriter, parseType(value[0]), value[1]);
+        marshal(wireFormatWriter, signatureType, serializeType(value[0]));
+        marshal(wireFormatWriter, value[0], value[1]);
 
         return;
       }

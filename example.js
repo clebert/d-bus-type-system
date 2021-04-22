@@ -3,13 +3,28 @@
 const {
   BufferReader,
   BufferWriter,
+  arrayType,
   marshal,
-  parseType,
+  objectPathType,
+  stringType,
+  structType,
+  uint32Type,
+  uint8Type,
   unmarshal,
+  variantType,
 } = require('./lib/cjs');
 
 const wireFormatWriter = new BufferWriter({littleEndian: true});
-const type = parseType('(yyyyuua(yv))');
+
+const type = structType(
+  uint8Type,
+  uint8Type,
+  uint8Type,
+  uint8Type,
+  uint32Type,
+  uint32Type,
+  arrayType(structType(uint8Type, variantType))
+);
 
 marshal(wireFormatWriter, type, [
   'l'.charCodeAt(0), // endianness
@@ -19,21 +34,17 @@ marshal(wireFormatWriter, type, [
   0, // message body length
   1, // serial
   [
-    [1, ['o', '/org/freedesktop/DBus']], // object path
-    [2, ['s', 'org.freedesktop.DBus']], // interface name
-    [3, ['s', 'Hello']], // member name
-    [6, ['s', 'org.freedesktop.DBus']], // destination
+    [1, [objectPathType, '/org/freedesktop/DBus']], // object path
+    [2, [stringType, 'org.freedesktop.DBus']], // interface name
+    [3, [stringType, 'Hello']], // member name
+    [6, [stringType, 'org.freedesktop.DBus']], // destination
   ],
 ]);
 
 wireFormatWriter.align(8);
 
-console.log(wireFormatWriter.buffer);
-
 const wireFormatReader = new BufferReader(wireFormatWriter.buffer, {
   littleEndian: true,
 });
 
-const value = unmarshal(wireFormatReader, type);
-
-console.log(JSON.stringify(value));
+unmarshal(wireFormatReader, type);

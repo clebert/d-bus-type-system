@@ -35,10 +35,29 @@ npm install d-bus-type-system
 ### Marshal a hello message
 
 ```js
-import {BufferWriter, marshal, parseType} from 'd-bus-type-system';
+import {
+  BufferWriter,
+  arrayType,
+  marshal,
+  objectPathType,
+  stringType,
+  structType,
+  uint32Type,
+  uint8Type,
+  variantType,
+} from 'd-bus-type-system';
 
 const wireFormatWriter = new BufferWriter({littleEndian: true});
-const type = parseType('(yyyyuua(yv))');
+
+const type = structType(
+  uint8Type,
+  uint8Type,
+  uint8Type,
+  uint8Type,
+  uint32Type,
+  uint32Type,
+  arrayType(structType(uint8Type, variantType))
+);
 
 marshal(wireFormatWriter, type, [
   'l'.charCodeAt(0), // endianness
@@ -48,10 +67,10 @@ marshal(wireFormatWriter, type, [
   0, // message body length
   1, // serial
   [
-    [1, ['o', '/org/freedesktop/DBus']], // object path
-    [2, ['s', 'org.freedesktop.DBus']], // interface name
-    [3, ['s', 'Hello']], // member name
-    [6, ['s', 'org.freedesktop.DBus']], // destination
+    [1, [objectPathType, '/org/freedesktop/DBus']], // object path
+    [2, [stringType, 'org.freedesktop.DBus']], // interface name
+    [3, [stringType, 'Hello']], // member name
+    [6, [stringType, 'org.freedesktop.DBus']], // destination
   ],
 ]);
 
@@ -81,25 +100,6 @@ const wireFormatReader = new BufferReader(wireFormatWriter.buffer, {
 });
 
 const value = unmarshal(wireFormatReader, type);
-
-console.log(JSON.stringify(value));
-```
-
-```json
-[
-  108,
-  1,
-  0,
-  1,
-  0,
-  1,
-  [
-    [1, ["o", "/org/freedesktop/DBus"]],
-    [3, ["s", "Hello"]],
-    [2, ["s", "org.freedesktop.DBus"]],
-    [6, ["s", "org.freedesktop.DBus"]]
-  ]
-]
 ```
 
 In Node.js, `TextDecoder` and `TextEncoder` must be made available as global

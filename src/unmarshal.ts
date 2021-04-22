@@ -1,6 +1,6 @@
 import {assertType} from './assert-type';
 import {BufferReader} from './buffer-reader';
-import {parseType} from './parse-type';
+import {parseTypes} from './parse-types';
 import {
   BasicTypeCode,
   CompleteType,
@@ -147,16 +147,20 @@ export function unmarshal(
           `${type.typeCode}[0]`
         );
 
-        const value = [
-          variantSignature,
-          unmarshal(
-            wireFormatReader,
-            parseType(variantSignature as string),
-            `${type.typeCode}[1]`
-          ),
-        ];
+        const variantTypes = parseTypes(variantSignature as string);
 
-        return value;
+        if (variantTypes.length > 1) {
+          throw new Error(
+            `signature=${JSON.stringify(
+              variantSignature
+            )}; expected-single-complete-type`
+          );
+        }
+
+        return [
+          variantTypes[0],
+          unmarshal(wireFormatReader, variantTypes[0], `${type.typeCode}[1]`),
+        ];
       }
       case ContainerTypeCode.DictEntry: {
         return [

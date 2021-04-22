@@ -1,4 +1,3 @@
-import {StringCursor} from './string-cursor';
 import {
   BasicType,
   BasicTypeCode,
@@ -25,23 +24,39 @@ import {
   variantType,
 } from './types';
 
-export function parseType(signature: string): CompleteType {
+export function parseTypes(
+  signature: string
+): readonly [CompleteType, ...CompleteType[]] {
   const signatureCursor = new StringCursor(signature);
 
   try {
-    const type = parseCompleteType(signatureCursor);
+    let type = parseCompleteType(signatureCursor);
 
     if (!type) {
       throw new Error('expected-complete-type');
     }
 
-    if (signatureCursor.next()) {
-      signatureCursor.undo();
+    const types: [CompleteType, ...CompleteType[]] = [type];
 
-      throw new Error('expected-end');
+    while (true) {
+      type = parseCompleteType(signatureCursor);
+
+      if (type) {
+        types.push(type);
+
+        continue;
+      }
+
+      if (signatureCursor.next()) {
+        signatureCursor.undo();
+
+        throw new Error('expected-complete-type');
+      }
+
+      break;
     }
 
-    return type;
+    return types;
   } catch (error) {
     throw new Error(
       `signature=${JSON.stringify(signature)}; offset=${
@@ -193,4 +208,26 @@ function parseDictEntryType(
   signatureCursor.undo();
 
   return undefined;
+}
+
+class StringCursor {
+  readonly #value: string;
+
+  #offset: number = 0;
+
+  constructor(value: string) {
+    this.#value = value;
+  }
+
+  get offset(): number {
+    return this.#offset;
+  }
+
+  next(): string | undefined {
+    return this.#value[this.#offset++];
+  }
+
+  undo(): void {
+    this.#offset -= 1;
+  }
 }

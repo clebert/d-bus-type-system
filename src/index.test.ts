@@ -1,21 +1,30 @@
 import {TextDecoder, TextEncoder} from 'util';
 import {
-  BasicTypeCode,
   BufferReader,
   BufferReaderOptions,
   BufferWriter,
   BufferWriterOptions,
+  arrayType,
   bigInt64Type,
   bigUint64Type,
+  booleanType,
+  dictEntryType,
+  float64Type,
   int16Type,
   int32Type,
   marshal,
-  parseType,
+  objectPathType,
+  parseTypes,
   serializeType,
+  signatureType,
+  stringType,
+  structType,
   uint16Type,
   uint32Type,
   uint8Type,
+  unixFdType,
   unmarshal,
+  variantType,
 } from '.';
 
 global.TextDecoder = TextDecoder as any;
@@ -137,9 +146,24 @@ test('marshal values of all types and unmarshal them again', () => {
     ['(uuu)', 'be', 0, '00 00 00 2a ff ff ff ff 00 00 07 c1', [42, 4294967295, 1985]],
     ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00 00 00 ff ff ff ff c1 07 00 00', [42, 4294967295, 1985]],
 
-    ['v', 'le', 0, '01 6e 00 00 2a 00', [BasicTypeCode.Int16, 42]],
-    ['v', 'be', 0, '01 6e 00 00 00 2a', [BasicTypeCode.Int16, 42]],
-    ['v', 'le', 1, '00 01 6e 00 2a 00', [BasicTypeCode.Int16, 42]],
+    ['v', 'le', 0, '01 79 00 2a', [uint8Type, 42]],
+    ['v', 'le', 0, '01 6e 00 00 2a 00', [int16Type, 42]],
+    ['v', 'be', 0, '01 6e 00 00 00 2a', [int16Type, 42]],
+    ['v', 'le', 1, '00 01 6e 00 2a 00', [int16Type, 42]],
+    ['v', 'le', 0, '01 71 00 00 2a 00', [uint16Type, 42]],
+    ['v', 'le', 0, '01 69 00 00 2a 00 00 00', [int32Type, 42]],
+    ['v', 'le', 0, '01 75 00 00 2a 00 00 00', [uint32Type, 42]],
+    ['v', 'le', 0, '01 78 00 00 00 00 00 00 2a 00 00 00 00 00 00 00', [bigInt64Type, 42n]],
+    ['v', 'le', 0, '01 74 00 00 00 00 00 00 2a 00 00 00 00 00 00 00', [bigUint64Type, 42n]],
+    ['v', 'le', 0, '01 64 00 00 00 00 00 00 00 00 00 00 00 00 45 40', [float64Type, 42]],
+    ['v', 'le', 0, '01 62 00 00 01 00 00 00', [booleanType, true]],
+    ['v', 'le', 0, '01 68 00 00 2a 00 00 00', [unixFdType, 42]],
+    ['v', 'le', 0, '01 73 00 00 03 00 00 00 66 6f 6f 00', [stringType, 'foo']],
+    ['v', 'le', 0, '01 6f 00 00 01 00 00 00 2f 00', [objectPathType, '/']],
+    ['v', 'le', 0, '01 67 00 01 6e 00', [signatureType, 'n']],
+    ['v', 'le', 0, '02 61 6e 00 02 00 00 00 2a 00', [arrayType(int16Type), [42]]],
+    ['v', 'le', 0, '03 28 6e 29 00 00 00 00 2a 00', [structType(int16Type), [42]]],
+    ['v', 'le', 0, '01 76 00 01 6e 00 2a 00', [variantType, [int16Type, 42]]],
   ];
 
   for (const [signature, endianness, byteOffset, bytes, value] of testCases) {
@@ -156,7 +180,7 @@ test('marshal values of all types and unmarshal them again', () => {
     }
 
     const wireFormatWriter = new BufferWriter(options);
-    const type = parseType(signature);
+    const type = parseTypes(signature)[0];
 
     expect(serializeType(type)).toBe(signature);
     marshal(wireFormatWriter, type, value);
@@ -265,6 +289,9 @@ test('various unmarshalling errors', () => {
     ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00', 'type=r; type=u=r[0]; byte-offset=8; out-of-bounds=4'],
     ['(uuu)', 'le', 1, '00 00 00 00 00 00 00 00 2a 00 00 00', 'type=r; type=u=r[1]; byte-offset=12; out-of-bounds=4'],
 
+    ['v', 'le', 0, '03 66 6f 6f 00', 'type=v; signature="foo"; offset=0; expected-complete-type'],
+    ['v', 'le', 0, '04 7b 6e 6e 7d 00', 'type=v; signature="{nn}"; offset=0; expected-complete-type'],
+    ['v', 'le', 0, '02 6e 6e 00 13 00', 'type=v; signature="nn"; expected-single-complete-type'],
     ['v', 'le', 0, '', 'type=v; type=g=v[0]; type=y=byte-length; byte-offset=0; out-of-bounds=1'],
     ['v', 'le', 0, '01 6e 00', 'type=v; type=n=v[1]; alignment; byte-offset=3; out-of-bounds=1'],
     ['v', 'le', 1, '00 01 6e 00', 'type=v; type=n=v[1]; byte-offset=4; out-of-bounds=2'],
@@ -273,7 +300,7 @@ test('various unmarshalling errors', () => {
   for (const [signature, endianness, byteOffset, bytes, message] of testCases) {
     const wireFormatReader = new BufferReader(toBuffer(bytes), {littleEndian: endianness === 'le', byteOffset});
 
-    expect(() => unmarshal(wireFormatReader, parseType(signature))).toThrow(new Error(message));
+    expect(() => unmarshal(wireFormatReader, parseTypes(signature)[0])).toThrow(new Error(message));
   }
 });
 
@@ -345,7 +372,7 @@ test('various marshalling errors', () => {
     ['a', 'le', 0, [], 'signature="a"; offset=1; type=a; invalid-element-type'],
     ['az', 'le', 0, [], 'signature="az"; offset=1; type=a; invalid-element-type'],
 
-    ['ay', 'le', 0, {}, 'type=a; invalid-value={}'],
+    ['ay', 'le', 0, {}, 'type=a; invalid-value={...}'],
     ['ay', 'le', 0, ['foo'], 'type=a; type=y=a[0]; invalid-value="foo"'],
 
     ['a{', 'le', 0, [[19, 85]], 'signature="a{"; offset=2; type=e; invalid-key-type'],
@@ -356,10 +383,10 @@ test('various marshalling errors', () => {
     ['a{yn', 'le', 0, [[19, 85]], 'signature="a{yn"; offset=4; type=e; unexpected-end'],
     ['a{ynn', 'le', 0, [[19, 85]], 'signature="a{ynn"; offset=4; type=e; unexpected-end'],
 
-    ['a{yn}', 'le', 0, [{}], 'type=a; type=e=a[0]; invalid-value={}'],
+    ['a{yn}', 'le', 0, [{}], 'type=a; type=e=a[0]; invalid-value={...}'],
     ['a{yn}', 'le', 0, [[]], 'type=a; type=e=a[0]; invalid-value=[]'],
     ['a{yn}', 'le', 0, [[19, 85], [42]], 'type=a; type=e=a[1]; invalid-value=[42]'],
-    ['a{yn}', 'le', 0, [[19, 85, 'foo']], 'type=a; type=e=a[0]; invalid-value=[19,85,"foo"]'],
+    ['a{yn}', 'le', 0, [[19, 85, 'foo']], 'type=a; type=e=a[0]; invalid-value=[19, 85, "foo"]'],
     ['a{yn}', 'le', 0, [['foo', 85]], 'type=a; type=e=a[0]; type=y=e[0]; invalid-value="foo"'],
     ['a{yn}', 'le', 0, [[19, 'foo']], 'type=a; type=e=a[0]; type=n=e[1]; invalid-value="foo"'],
 
@@ -371,23 +398,34 @@ test('various marshalling errors', () => {
     ['(yzy', 'le', 0, [], 'signature="(yzy"; offset=2; type=r; invalid-field-type'],
 
     ['(y)', 'le', 0, [], 'type=r; invalid-value=[]'],
-    ['(y)', 'le', 0, [19, 85], 'type=r; invalid-length=[19,85]; actual=2; expected=1'],
+    ['(y)', 'le', 0, [19, 85], 'type=r; invalid-length=[19, 85]; actual=2; expected=1'],
     ['(yy)', 'le', 0, [19], 'type=r; invalid-length=[19]; actual=1; expected=2'],
     ['(yy)', 'le', 0, ['foo', 85], 'type=r; type=y=r[0]; invalid-value="foo"'],
     ['(yy)', 'le', 0, [19, 'foo'], 'type=r; type=y=r[1]; invalid-value="foo"'],
 
     ['v', 'le', 0, [], 'type=v; invalid-value=[]'],
     ['v', 'le', 0, ['foo'], 'type=v; invalid-value=["foo"]'],
-    ['v', 'le', 0, [19, 85], 'type=v; invalid-value=[19,85]'],
-    ['v', 'le', 0, ['foo', 19, 85], 'type=v; invalid-value=["foo",19,85]'],
-    ['v', 'le', 0, ['foo', 42], 'type=v; signature="foo"; offset=0; expected-complete-type'],
-    ['v', 'le', 0, ['nn', 42], 'type=v; signature="nn"; offset=1; expected-end'],
-    ['v', 'le', 0, ['s', 42], 'type=v; type=s; invalid-value=42'],
+    ['v', 'le', 0, [null, 'foo'], 'type=v; invalid-value=[null, "foo"]'],
+    ['v', 'le', 0, [undefined, 'foo'], 'type=v; invalid-value=[undefined, "foo"]'],
+    ['v', 'le', 0, [stringType, 'foo', 42], 'type=v; invalid-value=[{...}, "foo", 42]'],
+    ['v', 'le', 0, [dictEntryType(stringType, stringType), 42], 'type=v; invalid-value=[{...}, 42]'],
+    ['v', 'le', 0, [stringType, 42], 'type=v; type=s; invalid-value=42'],
   ];
 
   for (const [signature, endianness, byteOffset, value, message] of testCases) {
     const wireFormatWriter = new BufferWriter({littleEndian: endianness === 'le', byteOffset});
 
-    expect(() => marshal(wireFormatWriter, parseType(signature), value)).toThrow(new Error(message));
+    expect(() => marshal(wireFormatWriter, parseTypes(signature)[0], value)).toThrow(new Error(message));
   }
+});
+
+test('parse various types', () => {
+  expect(parseTypes('oa{sa{sv}}')).toEqual([
+    objectPathType,
+    arrayType(dictEntryType(stringType, arrayType(dictEntryType(stringType, variantType)))),
+  ]);
+
+  expect(() => parseTypes('')).toThrow(new Error('signature=""; offset=0; expected-complete-type'));
+  expect(() => parseTypes('z')).toThrow(new Error('signature="z"; offset=0; expected-complete-type'));
+  expect(() => parseTypes('nz')).toThrow(new Error('signature="nz"; offset=1; expected-complete-type'));
 });
