@@ -1,3 +1,5 @@
+import {getErrorMessage} from './get-error-message.js';
+
 export interface BufferReaderOptions {
   readonly littleEndian?: boolean;
   readonly byteOffset?: number;
@@ -26,7 +28,7 @@ export class BufferReader {
       try {
         this.#getDataView(bytePadding - byteRemainder);
       } catch (error) {
-        throw new Error(`alignment; ${error.message}`);
+        throw new Error(`alignment; ${getErrorMessage(error)}`);
       }
     }
 
@@ -68,21 +70,21 @@ export class BufferReader {
   readBytes(byteLength: number): ArrayBuffer {
     return this.#getDataView(byteLength).buffer.slice(
       this.#byteOffset - byteLength,
-      this.#byteOffset
+      this.#byteOffset,
     );
   }
 
   readonly #getDataView = (byteLength: number): DataView => {
     const remainingByteLength = Math.max(
       this.buffer.byteLength - this.#byteOffset,
-      0
+      0,
     );
 
     if (byteLength > remainingByteLength) {
       throw new Error(
         `byte-offset=${this.#byteOffset}; out-of-bounds=${
           byteLength - remainingByteLength
-        }`
+        }`,
       );
     }
 

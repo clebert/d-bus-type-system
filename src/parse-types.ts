@@ -1,10 +1,13 @@
-import {
+import {getErrorMessage} from './get-error-message.js';
+import type {
   BasicType,
-  BasicTypeCode,
   CompleteType,
   ContainerType,
-  ContainerTypeCode,
   DictEntryType,
+} from './types.js';
+import {
+  BasicTypeCode,
+  ContainerTypeCode,
   arrayType,
   bigInt64Type,
   bigUint64Type,
@@ -22,10 +25,10 @@ import {
   uint8Type,
   unixFdType,
   variantType,
-} from './types';
+} from './types.js';
 
 export function parseTypes(
-  signature: string
+  signature: string,
 ): readonly [CompleteType, ...CompleteType[]] {
   const signatureCursor = new StringCursor(signature);
 
@@ -33,7 +36,7 @@ export function parseTypes(
     let type = parseCompleteType(signatureCursor);
 
     if (!type) {
-      throw new Error('expected-complete-type');
+      throw new Error(`expected-complete-type`);
     }
 
     const types: [CompleteType, ...CompleteType[]] = [type];
@@ -50,7 +53,7 @@ export function parseTypes(
       if (signatureCursor.next()) {
         signatureCursor.undo();
 
-        throw new Error('expected-complete-type');
+        throw new Error(`expected-complete-type`);
       }
 
       break;
@@ -61,7 +64,7 @@ export function parseTypes(
     throw new Error(
       `signature=${JSON.stringify(signature)}; offset=${
         signatureCursor.offset
-      }; ${error.message}`
+      }; ${getErrorMessage(error)}`,
     );
   }
 }
@@ -117,13 +120,13 @@ function parseBasicType(signatureCursor: StringCursor): BasicType | undefined {
 }
 
 function parseCompleteType(
-  signatureCursor: StringCursor
+  signatureCursor: StringCursor,
 ): CompleteType | undefined {
   return parseBasicType(signatureCursor) ?? parseContainerType(signatureCursor);
 }
 
 function parseContainerType(
-  signatureCursor: StringCursor
+  signatureCursor: StringCursor,
 ): ContainerType | undefined {
   const typeCode = signatureCursor.next();
 
@@ -139,7 +142,7 @@ function parseContainerType(
 
       return arrayType(elementType);
     }
-    case '(': {
+    case `(`: {
       const fieldType = parseCompleteType(signatureCursor);
 
       if (!fieldType) {
@@ -154,7 +157,7 @@ function parseContainerType(
         otherFieldTypes.push(otherFieldType);
       }
 
-      if (signatureCursor.next() !== ')') {
+      if (signatureCursor.next() !== `)`) {
         signatureCursor.undo();
 
         throw new Error(`type=${ContainerTypeCode.Struct}; invalid-field-type`);
@@ -173,17 +176,17 @@ function parseContainerType(
 }
 
 function parseDictEntryType(
-  signatureCursor: StringCursor
+  signatureCursor: StringCursor,
 ): DictEntryType<any, any> | undefined {
   const typeCode = signatureCursor.next();
 
   switch (typeCode) {
-    case '{': {
+    case `{`: {
       const keyType = parseBasicType(signatureCursor);
 
       if (!keyType) {
         throw new Error(
-          `type=${ContainerTypeCode.DictEntry}; invalid-key-type`
+          `type=${ContainerTypeCode.DictEntry}; invalid-key-type`,
         );
       }
 
@@ -191,11 +194,11 @@ function parseDictEntryType(
 
       if (!valueType) {
         throw new Error(
-          `type=${ContainerTypeCode.DictEntry}; invalid-value-type`
+          `type=${ContainerTypeCode.DictEntry}; invalid-value-type`,
         );
       }
 
-      if (signatureCursor.next() !== '}') {
+      if (signatureCursor.next() !== `}`) {
         signatureCursor.undo();
 
         throw new Error(`type=${ContainerTypeCode.DictEntry}; unexpected-end`);

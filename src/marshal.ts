@@ -1,18 +1,15 @@
-import {assertType} from './assert-type';
-import {BufferWriter} from './buffer-writer';
-import {serializeType} from './serialize-type';
-import {
-  BasicTypeCode,
-  CompleteType,
-  ContainerTypeCode,
-  DictEntryType,
-  signatureType,
-} from './types';
+import {assertType} from './assert-type.js';
+import {BufferWriter} from './buffer-writer.js';
+import {getErrorMessage} from './get-error-message.js';
+import {serializeType} from './serialize-type.js';
+import type {CompleteType, DictEntryType} from './types.js';
+import {BasicTypeCode, ContainerTypeCode, signatureType} from './types.js';
 
+// eslint-disable-next-line complexity
 export function marshal(
   wireFormatWriter: BufferWriter,
   type: CompleteType | DictEntryType<any, any>,
-  value: unknown
+  value: unknown,
 ): void {
   try {
     wireFormatWriter.align(type.bytePadding);
@@ -142,8 +139,9 @@ export function marshal(
       }
     }
   } catch (error) {
-    throw error.message.startsWith(`type=${type.typeCode};`)
+    throw error instanceof Error &&
+      error.message.startsWith(`type=${type.typeCode};`)
       ? error
-      : new Error(`type=${type.typeCode}; ${error.message}`);
+      : new Error(`type=${type.typeCode}; ${getErrorMessage(error)}`);
   }
 }

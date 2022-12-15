@@ -2,45 +2,52 @@
   "name": "d-bus-type-system",
   "version": "0.14.0",
   "description": "A TypeScript implementation of the D-Bus type system.",
-  "bugs": {
-    "url": "https://github.com/clebert/d-bus-type-system/issues"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/clebert/d-bus-type-system.git"
   },
   "license": "MIT",
-  "author": "Clemens Akens <clebert@me.com>",
+  "author": "Clemens Akens",
   "sideEffects": false,
-  "main": "lib/cjs/index.js",
-  "module": "lib/esm/index.js",
-  "types": "lib/esm/index.d.ts",
+  "type": "module",
+  "exports": "./lib/index.js",
   "files": [
-    "lib/cjs",
-    "lib/esm"
+    "lib"
   ],
   "scripts": {
-    "build": "run-p build:*",
-    "build:cjs": "tsc --project tsconfig.cjs.json --incremental --pretty",
-    "build:esm": "tsc --project tsconfig.esm.json --incremental --pretty",
-    "ci": "run-p build format:test lint test",
-    "postci": "node example.js",
-    "format": "prettier --write '**/*.{html,js,json,md,ts,tsx,yml}'",
-    "format:test": "prettier --list-different '**/*.{html,js,json,md,ts,tsx,yml}'",
-    "lint": "tslint --config tslint.json --project tsconfig.json --format verbose",
+    "prepare": "node onecfg.js",
+    "ci": "run-p compile:check compile:emit format:check lint test",
+    "compile:check": "tsc",
+    "compile:emit": "tsc --project tsconfig.emit.json",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "lint": "eslint .",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --silent --passWithNoTests",
     "release": "npm version",
-    "postrelease": "git push --follow-tags",
-    "test": "jest"
+    "postrelease": "git push --follow-tags"
   },
   "devDependencies": {
-    "@babel/core": "^7.13.14",
-    "@babel/preset-env": "^7.13.12",
-    "@babel/preset-typescript": "^7.13.0",
-    "@types/jest": "^26.0.22",
-    "jest": "^26.6.3",
+    "@jest/globals": "^29.3.1",
+    "@onecfg/standard": "^8.0.0",
+    "@swc/core": "^1.3.23",
+    "@swc/jest": "^0.2.24",
+    "@typescript-eslint/eslint-plugin": "^5.46.1",
+    "@typescript-eslint/parser": "^5.46.1",
+    "eslint": "^8.29.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-markdown": "^3.0.0",
+    "jest": "^29.3.1",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.2.1",
-    "tslint": "^6.1.3",
-    "typescript": "^4.2.3"
+    "onecfg": "^5.2.1",
+    "prettier": "^2.8.1",
+    "typescript": "^4.9.4"
+  },
+  "wallaby": {
+    "env": {
+      "params": {
+        "runner": "--experimental-vm-modules"
+      }
+    }
   }
 }

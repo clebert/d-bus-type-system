@@ -16,19 +16,19 @@ export type BasicType =
   | typeof signatureType;
 
 export enum BasicTypeCode {
-  Uint8 = 'y',
-  Int16 = 'n',
-  Uint16 = 'q',
-  Int32 = 'i',
-  Uint32 = 'u',
-  BigInt64 = 'x',
-  BigUint64 = 't',
-  Float64 = 'd',
-  Boolean = 'b',
-  UnixFd = 'h',
-  String = 's',
-  ObjectPath = 'o',
-  Signature = 'g',
+  Uint8 = `y`,
+  Int16 = `n`,
+  Uint16 = `q`,
+  Int32 = `i`,
+  Uint32 = `u`,
+  BigInt64 = `x`,
+  BigUint64 = `t`,
+  Float64 = `d`,
+  Boolean = `b`,
+  UnixFd = `h`,
+  String = `s`,
+  ObjectPath = `o`,
+  Signature = `g`,
 }
 
 export type ContainerType =
@@ -37,7 +37,7 @@ export type ContainerType =
   | VariantType;
 
 export interface ArrayType<
-  TElementType extends CompleteType | DictEntryType<any, any>
+  TElementType extends CompleteType | DictEntryType<any, any>,
 > {
   readonly typeCode: ContainerTypeCode.Array;
   readonly bytePadding: 4;
@@ -46,7 +46,7 @@ export interface ArrayType<
 }
 
 export interface StructType<
-  TFieldTypes extends readonly [CompleteType, ...CompleteType[]]
+  TFieldTypes extends readonly [CompleteType, ...CompleteType[]],
 > {
   readonly typeCode: ContainerTypeCode.Struct;
   readonly bytePadding: 8;
@@ -62,7 +62,7 @@ export interface VariantType {
 
 export interface DictEntryType<
   TKeyType extends BasicType,
-  TValueType extends CompleteType
+  TValueType extends CompleteType,
 > {
   readonly typeCode: ContainerTypeCode.DictEntry;
   readonly bytePadding: 8;
@@ -72,10 +72,10 @@ export interface DictEntryType<
 }
 
 export enum ContainerTypeCode {
-  Array = 'a',
-  Struct = 'r', // (...)
-  Variant = 'v',
-  DictEntry = 'e', // {...}
+  Array = `a`,
+  Struct = `r`, // (...)
+  Variant = `v`,
+  DictEntry = `e`, // {...}
 }
 
 export type Predicate<TValue> = (value: unknown) => value is TValue;
@@ -84,7 +84,7 @@ export const uint8Type = {
   typeCode: BasicTypeCode.Uint8,
   bytePadding: 1,
   predicate: (value: unknown): value is number =>
-    typeof value === 'number' &&
+    typeof value === `number` &&
     Number.isInteger(value) &&
     value >= uint8Type.minValue &&
     value <= uint8Type.maxValue,
@@ -96,7 +96,7 @@ export const int16Type = {
   typeCode: BasicTypeCode.Int16,
   bytePadding: 2,
   predicate: (value: unknown): value is number =>
-    typeof value === 'number' &&
+    typeof value === `number` &&
     Number.isInteger(value) &&
     value >= int16Type.minValue &&
     value <= int16Type.maxValue,
@@ -108,7 +108,7 @@ export const uint16Type = {
   typeCode: BasicTypeCode.Uint16,
   bytePadding: 2,
   predicate: (value: unknown): value is number =>
-    typeof value === 'number' &&
+    typeof value === `number` &&
     Number.isInteger(value) &&
     value >= uint16Type.minValue &&
     value <= uint16Type.maxValue,
@@ -120,7 +120,7 @@ export const int32Type = {
   typeCode: BasicTypeCode.Int32,
   bytePadding: 4,
   predicate: (value: unknown): value is number =>
-    typeof value === 'number' &&
+    typeof value === `number` &&
     Number.isInteger(value) &&
     value >= int32Type.minValue &&
     value <= int32Type.maxValue,
@@ -132,7 +132,7 @@ export const uint32Type = {
   typeCode: BasicTypeCode.Uint32,
   bytePadding: 4,
   predicate: (value: unknown): value is number =>
-    typeof value === 'number' &&
+    typeof value === `number` &&
     Number.isInteger(value) &&
     value >= uint32Type.minValue &&
     value <= uint32Type.maxValue,
@@ -144,7 +144,7 @@ export const bigInt64Type = {
   typeCode: BasicTypeCode.BigInt64,
   bytePadding: 8,
   predicate: (value: unknown): value is bigint =>
-    typeof value === 'bigint' &&
+    typeof value === `bigint` &&
     value >= bigInt64Type.minValue &&
     value <= bigInt64Type.maxValue,
   minValue: -9223372036854775808n,
@@ -155,7 +155,7 @@ export const bigUint64Type = {
   typeCode: BasicTypeCode.BigUint64,
   bytePadding: 8,
   predicate: (value: unknown): value is bigint =>
-    typeof value === 'bigint' &&
+    typeof value === `bigint` &&
     value >= bigUint64Type.minValue &&
     value <= bigUint64Type.maxValue,
   minValue: 0n,
@@ -166,13 +166,13 @@ export const float64Type = {
   typeCode: BasicTypeCode.Float64,
   bytePadding: 8,
   predicate: (value: unknown): value is number =>
-    typeof value === 'number' && Number.isFinite(value),
+    typeof value === `number` && Number.isFinite(value),
 } as const;
 
 export const booleanType = {
   typeCode: BasicTypeCode.Boolean,
   bytePadding: 4,
-  predicate: (value: unknown): value is boolean => typeof value === 'boolean',
+  predicate: (value: unknown): value is boolean => typeof value === `boolean`,
 } as const;
 
 export const unixFdType = {
@@ -184,29 +184,29 @@ export const unixFdType = {
 export const stringType = {
   typeCode: BasicTypeCode.String,
   bytePadding: 4,
-  predicate: (value: unknown): value is string => typeof value === 'string',
+  predicate: (value: unknown): value is string => typeof value === `string`,
 } as const;
 
 export const objectPathType = {
   typeCode: BasicTypeCode.ObjectPath,
   bytePadding: 4,
   predicate: (value: unknown): value is string =>
-    typeof value === 'string' && /^\/$|^(\/[A-Za-z0-9_]+)+$/.test(value),
+    typeof value === `string` && /^\/$|^(\/[A-Za-z0-9_]+)+$/.test(value),
 } as const;
 
 export const signatureType = {
   typeCode: BasicTypeCode.Signature,
   bytePadding: 1,
-  predicate: (value: unknown): value is string => typeof value === 'string',
+  predicate: (value: unknown): value is string => typeof value === `string`,
 } as const;
 
 const isArray = (value: unknown): value is readonly unknown[] =>
   Array.isArray(value);
 
 export const arrayType = <
-  TElementType extends CompleteType | DictEntryType<any, any>
+  TElementType extends CompleteType | DictEntryType<any, any>,
 >(
-  elementType: TElementType
+  elementType: TElementType,
 ): ArrayType<TElementType> => ({
   typeCode: ContainerTypeCode.Array,
   bytePadding: 4,
@@ -218,7 +218,7 @@ const isStruct = (value: unknown): value is readonly [unknown, ...unknown[]] =>
   Array.isArray(value) && value.length > 0;
 
 export const structType = <
-  TFieldTypes extends readonly [CompleteType, ...CompleteType[]]
+  TFieldTypes extends readonly [CompleteType, ...CompleteType[]],
 >(
   ...fieldTypes: TFieldTypes
 ): StructType<TFieldTypes> => ({
@@ -229,7 +229,7 @@ export const structType = <
 });
 
 const isVariant = (
-  value: unknown
+  value: unknown,
 ): value is readonly [CompleteType, unknown] => {
   if (!Array.isArray(value) || value.length !== 2) {
     return false;
@@ -270,10 +270,10 @@ const isDictEntry = (value: unknown): value is readonly [unknown, unknown] =>
 
 export const dictEntryType = <
   TKeyType extends BasicType,
-  TValueType extends CompleteType
+  TValueType extends CompleteType,
 >(
   keyType: TKeyType,
-  valueType: TValueType
+  valueType: TValueType,
 ): DictEntryType<TKeyType, TValueType> => ({
   typeCode: ContainerTypeCode.DictEntry,
   bytePadding: 8,

@@ -1,20 +1,21 @@
-import {assertType} from './assert-type';
-import {BufferReader} from './buffer-reader';
-import {parseTypes} from './parse-types';
+import {assertType} from './assert-type.js';
+import type {BufferReader} from './buffer-reader.js';
+import {getErrorMessage} from './get-error-message.js';
+import {parseTypes} from './parse-types.js';
+import type {CompleteType, DictEntryType} from './types.js';
 import {
   BasicTypeCode,
-  CompleteType,
   ContainerTypeCode,
-  DictEntryType,
   signatureType,
   uint32Type,
   uint8Type,
-} from './types';
+} from './types.js';
 
+// eslint-disable-next-line complexity
 export function unmarshal(
   wireFormatReader: BufferReader,
   type: CompleteType | DictEntryType<any, any>,
-  typeName: string = ''
+  typeName: string = ``,
 ): unknown {
   try {
     wireFormatReader.align(type.bytePadding);
@@ -65,20 +66,20 @@ export function unmarshal(
         const byteLength = unmarshal(
           wireFormatReader,
           type.typeCode === BasicTypeCode.Signature ? uint8Type : uint32Type,
-          'byte-length'
+          `byte-length`,
         );
 
         const value = new TextDecoder().decode(
-          wireFormatReader.readBytes(byteLength as number)
+          wireFormatReader.readBytes(byteLength as number),
         );
 
-        const nulByteIndex = value.indexOf('\u0000');
+        const nulByteIndex = value.indexOf(`\u0000`);
 
         if (nulByteIndex > -1) {
           throw new Error(
             `byte-offset=${
               wireFormatReader.byteOffset - (value.length - nulByteIndex)
-            }; unexpected-nul-byte`
+            }; unexpected-nul-byte`,
           );
         }
 
@@ -98,14 +99,16 @@ export function unmarshal(
         const byteLength = unmarshal(
           wireFormatReader,
           uint32Type,
-          'byte-length'
+          `byte-length`,
         );
 
         try {
           wireFormatReader.align(type.elementType.bytePadding);
         } catch (error) {
           throw new Error(
-            `type=${type.elementType.typeCode}=${type.typeCode}[0]; ${error.message}`
+            `type=${type.elementType.typeCode}=${
+              type.typeCode
+            }[0]; ${getErrorMessage(error)}`,
           );
         }
 
@@ -119,8 +122,8 @@ export function unmarshal(
             unmarshal(
               wireFormatReader,
               type.elementType,
-              `${type.typeCode}[${elements.length}]`
-            )
+              `${type.typeCode}[${elements.length}]`,
+            ),
           );
         }
 
@@ -129,7 +132,7 @@ export function unmarshal(
             `byte-offset=${byteOffset}; invalid-byte-length; actual=${
               (byteLength as number) +
               (wireFormatReader.byteOffset - finalByteOffset)
-            }; expected=${byteLength}`
+            }; expected=${byteLength}`,
           );
         }
 
@@ -137,14 +140,14 @@ export function unmarshal(
       }
       case ContainerTypeCode.Struct: {
         return type.fieldTypes.map((fieldType, index) =>
-          unmarshal(wireFormatReader, fieldType, `${type.typeCode}[${index}]`)
+          unmarshal(wireFormatReader, fieldType, `${type.typeCode}[${index}]`),
         );
       }
       case ContainerTypeCode.Variant: {
         const variantSignature = unmarshal(
           wireFormatReader,
           signatureType,
-          `${type.typeCode}[0]`
+          `${type.typeCode}[0]`,
         );
 
         const variantTypes = parseTypes(variantSignature as string);
@@ -152,8 +155,8 @@ export function unmarshal(
         if (variantTypes.length > 1) {
           throw new Error(
             `signature=${JSON.stringify(
-              variantSignature
-            )}; expected-single-complete-type`
+              variantSignature,
+            )}; expected-single-complete-type`,
           );
         }
 
@@ -170,12 +173,13 @@ export function unmarshal(
       }
     }
   } catch (error) {
-    throw error.message.startsWith(`type=${type.typeCode};`)
+    throw error instanceof Error &&
+      error.message.startsWith(`type=${type.typeCode};`)
       ? error
       : new Error(
-          `type=${type.typeCode}${typeName ? `=${typeName}` : ''}; ${
-            error.message
-          }`
+          `type=${type.typeCode}${
+            typeName ? `=${typeName}` : ``
+          }; ${getErrorMessage(error)}`,
         );
   }
 }

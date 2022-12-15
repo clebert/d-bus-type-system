@@ -1,13 +1,14 @@
-import {
+import {getErrorMessage} from './get-error-message.js';
+import type {
   ArrayType,
   BasicType,
   CompleteType,
-  ContainerTypeCode,
   DictEntryType,
   Predicate,
   StructType,
   VariantType,
-} from './types';
+} from './types.js';
+import {ContainerTypeCode} from './types.js';
 
 export type CompleteValue<TType extends CompleteType> = TType extends BasicType
   ? BasicValue<TType>
@@ -19,9 +20,8 @@ export type CompleteValue<TType extends CompleteType> = TType extends BasicType
   ? VariantValue
   : never;
 
-export type BasicValue<
-  TType extends BasicType
-> = TType['predicate'] extends Predicate<infer TValue> ? TValue : never;
+export type BasicValue<TType extends BasicType> =
+  TType['predicate'] extends Predicate<infer TValue> ? TValue : never;
 
 export type ArrayValue<TType> = TType extends ArrayType<infer TElementType>
   ? TElementType extends CompleteType
@@ -51,23 +51,23 @@ export type DictEntryValue<TType> = TType extends DictEntryType<
   : never;
 
 export function assertType<
-  TType extends CompleteType | DictEntryType<any, any>
+  TType extends CompleteType | DictEntryType<any, any>,
 >(
   type: TType,
   value: unknown,
   shallowTypeInference: true,
-  typeName?: string
+  typeName?: string,
 ): asserts value is TType['predicate'] extends Predicate<infer TValue>
   ? TValue
   : never;
 
 export function assertType<
-  TType extends CompleteType | DictEntryType<any, any>
+  TType extends CompleteType | DictEntryType<any, any>,
 >(
   type: TType,
   value: unknown,
   shallowTypeInference?: false,
-  typeName?: string
+  typeName?: string,
 ): asserts value is TType extends CompleteType
   ? CompleteValue<TType>
   : TType extends DictEntryType<any, any>
@@ -78,7 +78,7 @@ export function assertType(
   type: CompleteType | DictEntryType<any, any>,
   value: unknown,
   _shallowTypeInference?: boolean,
-  typeName: string = ''
+  typeName: string = ``,
 ): void {
   try {
     switch (type.typeCode) {
@@ -89,7 +89,7 @@ export function assertType(
               type.elementType,
               element,
               true,
-              `${type.typeCode}[${index}]`
+              `${type.typeCode}[${index}]`,
             );
           });
 
@@ -104,7 +104,7 @@ export function assertType(
             throw new Error(
               `invalid-length=${stringify(value)}; actual=${
                 value.length
-              }; expected=${type.fieldTypes.length}`
+              }; expected=${type.fieldTypes.length}`,
             );
           }
 
@@ -112,7 +112,7 @@ export function assertType(
             throw new Error(
               `invalid-length=${stringify(value)}; actual=${
                 value.length
-              }; expected=${type.fieldTypes.length}`
+              }; expected=${type.fieldTypes.length}`,
             );
           }
 
@@ -121,7 +121,7 @@ export function assertType(
               type.fieldTypes[index],
               field,
               true,
-              `${type.typeCode}[${index}]`
+              `${type.typeCode}[${index}]`,
             );
           });
 
@@ -156,19 +156,21 @@ export function assertType(
     throw new Error(`invalid-value=${stringify(value)}`);
   } catch (error) {
     throw new Error(
-      `type=${type.typeCode}${typeName ? `=${typeName}` : ''}; ${error.message}`
+      `type=${type.typeCode}${
+        typeName ? `=${typeName}` : ``
+      }; ${getErrorMessage(error)}`,
     );
   }
 }
 
 function stringify(value: unknown): string {
   switch (typeof value) {
-    case 'bigint':
-    case 'boolean':
-    case 'number': {
+    case `bigint`:
+    case `boolean`:
+    case `number`: {
       return String(value);
     }
-    case 'string': {
+    case `string`: {
       return JSON.stringify(value);
     }
   }
@@ -178,8 +180,8 @@ function stringify(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
-    return `[${value.map(stringify).join(', ')}]`;
+    return `[${value.map(stringify).join(`, `)}]`;
   }
 
-  return '{...}';
+  return `{...}`;
 }

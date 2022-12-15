@@ -1,12 +1,8 @@
-import {
-  BasicTypeCode,
-  CompleteType,
-  ContainerTypeCode,
-  DictEntryType,
-} from './types';
+import type {CompleteType, DictEntryType} from './types.js';
+import {BasicTypeCode, ContainerTypeCode} from './types.js';
 
 export function serializeType(
-  type: CompleteType | DictEntryType<any, any>
+  type: CompleteType | DictEntryType<any, any>,
 ): string {
   switch (type.typeCode) {
     case BasicTypeCode.Uint8:
@@ -29,7 +25,7 @@ export function serializeType(
       return `${type.typeCode}${serializeType(type.elementType)}`;
     }
     case ContainerTypeCode.Struct: {
-      return `(${type.fieldTypes.map(serializeType).join('')})`;
+      return `(${type.fieldTypes.map(serializeType).join(``)})`;
     }
     case ContainerTypeCode.DictEntry: {
       return `{${serializeType(type.keyType)}${serializeType(type.valueType)}}`;
