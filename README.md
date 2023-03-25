@@ -46,17 +46,17 @@ const type = structType(
 );
 
 marshal(wireFormatWriter, type, [
-  'l'.charCodeAt(0), // endianness
+  `l`.charCodeAt(0), // endianness
   1, // message type: method call
   0, // flags
   1, // major protocol version
   0, // message body length
   1, // serial
   [
-    [1, [objectPathType, '/org/freedesktop/DBus']], // object path
-    [2, [stringType, 'org.freedesktop.DBus']], // interface name
-    [3, [stringType, 'Hello']], // member name
-    [6, [stringType, 'org.freedesktop.DBus']], // destination
+    [1, [objectPathType, `/org/freedesktop/DBus`]], // object path
+    [2, [stringType, `org.freedesktop.DBus`]], // interface name
+    [3, [stringType, `Hello`]], // member name
+    [6, [stringType, `org.freedesktop.DBus`]], // destination
   ],
 ]);
 
