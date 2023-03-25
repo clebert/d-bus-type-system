@@ -1,6 +1,6 @@
 {
   "name": "d-bus-type-system",
-  "version": "0.14.0",
+  "version": "1.0.0",
   "description": "A TypeScript implementation of the D-Bus type system.",
   "repository": {
     "type": "git",
