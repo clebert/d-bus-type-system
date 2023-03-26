@@ -1,7 +1,5 @@
 import type {BufferReaderOptions, BufferWriterOptions} from './index.js';
 
-import {expect, test} from '@jest/globals';
-
 import {
   BufferReader,
   BufferWriter,
@@ -27,6 +25,7 @@ import {
   unmarshal,
   variantType,
 } from './index.js';
+import {expect, test} from '@jest/globals';
 
 test(`marshal values of all types and unmarshal them again`, () => {
   const testCases: readonly [string, 'le' | 'be', 0 | 1, string, unknown][] = [
