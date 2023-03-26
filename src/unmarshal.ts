@@ -1,8 +1,9 @@
-import {assertType} from './assert-type.js';
 import type {BufferReader} from './buffer-reader.js';
+import type {CompleteType, DictEntryType} from './types.js';
+
+import {assertType} from './assert-type.js';
 import {getErrorMessage} from './get-error-message.js';
 import {parseTypes} from './parse-types.js';
-import type {CompleteType, DictEntryType} from './types.js';
 import {
   BasicTypeCode,
   ContainerTypeCode,

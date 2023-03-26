@@ -1,8 +1,9 @@
+import type {CompleteType, DictEntryType} from './types.js';
+
 import {assertType} from './assert-type.js';
 import {BufferWriter} from './buffer-writer.js';
 import {getErrorMessage} from './get-error-message.js';
 import {serializeType} from './serialize-type.js';
-import type {CompleteType, DictEntryType} from './types.js';
 import {BasicTypeCode, ContainerTypeCode, signatureType} from './types.js';
 
 // eslint-disable-next-line complexity

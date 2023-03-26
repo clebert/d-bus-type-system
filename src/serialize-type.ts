@@ -1,4 +1,5 @@
 import type {CompleteType, DictEntryType} from './types.js';
+
 import {BasicTypeCode, ContainerTypeCode} from './types.js';
 
 export function serializeType(

@@ -1,10 +1,11 @@
-import {getErrorMessage} from './get-error-message.js';
 import type {
   BasicType,
   CompleteType,
   ContainerType,
   DictEntryType,
 } from './types.js';
+
+import {getErrorMessage} from './get-error-message.js';
 import {
   BasicTypeCode,
   ContainerTypeCode,

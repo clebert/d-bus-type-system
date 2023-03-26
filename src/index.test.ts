@@ -1,5 +1,7 @@
-import {expect, test} from '@jest/globals';
 import type {BufferReaderOptions, BufferWriterOptions} from './index.js';
+
+import {expect, test} from '@jest/globals';
+
 import {
   BufferReader,
   BufferWriter,

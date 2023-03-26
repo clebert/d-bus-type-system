@@ -1,5 +1,5 @@
-import {expect, test} from '@jest/globals';
 import {getErrorMessage} from './get-error-message.js';
+import {expect, test} from '@jest/globals';
 
 test(`getErrorMessage()`, () => {
   expect(getErrorMessage(new Error(`foo`))).toBe(`foo`);

@@ -1,4 +1,3 @@
-import {getErrorMessage} from './get-error-message.js';
 import type {
   ArrayType,
   BasicType,
@@ -8,6 +7,8 @@ import type {
   StructType,
   VariantType,
 } from './types.js';
+
+import {getErrorMessage} from './get-error-message.js';
 import {ContainerTypeCode} from './types.js';
 
 export type CompleteValue<TType extends CompleteType> = TType extends BasicType
