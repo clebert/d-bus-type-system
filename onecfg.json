@@ -19,7 +19,7 @@
       {
         "value": {
           "overrides": [
-            {"files": "**/*.test.ts", "options": {"printWidth": 140}}
+            {"files": "src/index.test.ts", "options": {"printWidth": 140}}
           ]
         }
       }

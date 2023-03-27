@@ -2,7 +2,7 @@
   "bracketSpacing": false,
   "overrides": [
     {
-      "files": "**/*.test.ts",
+      "files": "src/index.test.ts",
       "options": {
         "printWidth": 140
       }
